@@ -283,7 +283,6 @@ let mappingsOpen  = false;
 let nameMappings = [
   { shopify: 'Bliss Low Rise Thong',  inventory: 'Bliss Banded Thong'  },
   { shopify: 'Bliss Low Rise Bikini', inventory: 'Bliss Banded Bikini' },
-  { shopify: 'Sunday Pima Cami', inventory: 'Pima Sleep Cami' },
 ];
 
 // =====================================================================
@@ -706,12 +705,17 @@ function doComparison() {
       const colorOptMatch = !shpOpt1 || !invClr || shpOpt1 === invClr;
 
       // Check 2: name mismatch — Shopify title base doesn't directly match inventory style name
-      // (means we matched via a name mapping — worth flagging so naming can be standardised)
       const titleBase2   = (shpTitle.split(/\s+-\s+/)[0] || '').trim().toLowerCase();
       const invStyleLow  = (invRow['Style'] || '').trim().toLowerCase();
+      // If this pair is in nameMappings the user has already acknowledged the difference — no warning
+      const mappingAcknowledged = nameMappings.some(m =>
+        m.shopify.trim().toLowerCase() === titleBase2 &&
+        m.inventory.trim().toLowerCase() === invStyleLow
+      );
       const nameMatch    = titleBase2 === invStyleLow
                         || titleBase2.includes(invStyleLow)
-                        || invStyleLow.includes(titleBase2);
+                        || invStyleLow.includes(titleBase2)
+                        || mappingAcknowledged;
 
       const warnings = [];
       if (!colorOptMatch) warnings.push(`Color option mismatch — Shopify Option1 is "${shpRow['Option1 Value']}" but inventory color is "${invRow['Color']}". Update the product color option in Shopify.`);
