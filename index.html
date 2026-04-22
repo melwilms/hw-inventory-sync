@@ -281,9 +281,14 @@ let activeFilter  = 'all';
 let mappingsOpen  = false;
 
 let nameMappings = [
-  { shopify: 'Bliss Low Rise Thong',  inventory: 'Bliss Banded Thong'  },
-  { shopify: 'Bliss Low Rise Bikini', inventory: 'Bliss Banded Bikini' },
-  { shopify: 'Sunday Pima Cami', inventory: 'Pima Sleep Cami' },
+  { shopify: 'Bliss Low Rise Thong',              inventory: 'Bliss Banded Thong'                          },
+  { shopify: 'Bliss Low Rise Bikini',             inventory: 'Bliss Banded Bikini'                         },
+  { shopify: 'Sunday Pima Cami',                  inventory: 'Pima Sleep Cami'                             },
+  { shopify: 'Perfect Pima Pajama Pants',         inventory: 'Perfect Pima Pant (Piping)'                  },
+  { shopify: 'Perfect Pima Pajama Tee',           inventory: 'Perfect Pima Tee (Piping)'                   },
+  { shopify: 'Perfect Pima Pajama Shorts',        inventory: 'Perfect Pima Short (Piping)'                 },
+  { shopify: 'Perfect Pima Pajama Shirt',         inventory: 'Perfect Pima Short Sleeve Button Up (Piping)'},
+  { shopify: 'Perfect Pima Long Sleeve Pajama Shirt', inventory: 'Perfect Pima Long Sleeve Button Up (Piping)' },
 ];
 
 // =====================================================================
@@ -747,8 +752,11 @@ function doComparison() {
       });
       matchedInvSkus.add(invRow['CustomerSKU']);
     } else {
+      // Detect malformed title format — e.g. "Shirt -Blue" instead of "Shirt - Blue"
+      const titleFormatIssue = / -\S/.test(shpTitle);
       results.push({
         sku: '', shpTitle, invStyle: '', mode: 'no_match', hasIssue: true,
+        titleFormatIssue,
         invUpc:'', shpUpc:'', invColor:'', shpColor: shpRow['Option1 Value']||'',
         invSize:'', shpSize, invWt:'', shpWt:'', invQty:'', shpQty:'',
         pn:'No Match', upc:'No Match', color:'No Match', size:'No Match', weight:'No Match', qty:'No Match',
@@ -936,7 +944,7 @@ function renderTable() {
 
     return `<tr class="${rowCls}">
       <td>${skuCell}</td>
-      <td>${esc(r.shpTitle)}</td>
+      <td>${esc(r.shpTitle)}${r.titleFormatIssue ? `<div class="detail" style="color:#b45309">⚠ Title format issue in Shopify — missing space after dash (e.g. "Shirt -Blue" → "Shirt - Blue")</div>` : ''}</td>
       <td>${r.invStyle ? esc(r.invStyle) + (r.invColor ? `<span style="color:#aaa"> / ${esc(r.invColor)}</span>` : '') : '<em style="color:#ccc">—</em>'}</td>
       <td>${r.mode==='compare' ? (badge(r.pn) + (r.pn==='Mismatch'?`<div class="detail">Inv: ${esc(r.invStyle)}</div>`:'')) : (r.mode==='populated'?`<span class="b b-populated">✓</span>`:`<span class="b b-nomatch">No Match</span>`)}</td>
       <td>${showVal(r.upc,    r.invUpc,   r.shpUpc)}</td>
