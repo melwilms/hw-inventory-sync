@@ -1,5 +1,3 @@
-# hw-inventory-sync
-Compile or audit Shopify &amp; Inventory exports
 # Harper Wilde — Inventory Sync App
 
 A browser-based tool for merging inventory data into Shopify exports and auditing existing Shopify product data. No installation required — just open `index.html` in any browser.
@@ -8,9 +6,11 @@ A browser-based tool for merging inventory data into Shopify exports and auditin
 
 ## What it does
 
-The app has two modes:
+The app has three modes:
 
 **Compile** — Takes a Shopify product export (with blank SKUs) and fills in SKU, UPC, weight, and inventory quantity by matching products to your inventory file(s). Use this when setting up new products in Shopify.
+
+**Update** — Takes a Shopify product export (with existing SKUs) and overwrites UPC, weight, and qty with the latest values from your inventory file. Matches on SKU and shows exactly what changed (old → new) for every field. Use this when refreshing existing product data in Shopify.
 
 **Audit** — Takes a Shopify product export (with existing SKUs) and compares it against your inventory file(s) to flag mismatches in UPC, color, size, weight, and quantity. Use this for ongoing data quality checks.
 
@@ -19,7 +19,7 @@ The app has two modes:
 ## How to use
 
 ### 1. Select a mode
-Choose **Compile** or **Audit** depending on what you're doing.
+Choose **Compile**, **Update**, or **Audit** depending on what you're doing.
 
 ### 2. Upload files
 - **Shopify export** — Export your products from Shopify admin as a CSV. Rows can have blank or existing SKUs depending on the mode.
@@ -31,10 +31,10 @@ Both CSV and XLSX formats are supported for all uploads.
 If a product name differs between Shopify and your inventory system (e.g. "Sunday Pima Cami" vs "Pima Sleep Cami"), add a mapping so the app can match them correctly. Products in the mapping list will not trigger name mismatch warnings.
 
 ### 4. Run
-Click **Run Compile** or **Run Audit**. Results appear in a color-coded table.
+Click **Run Compile**, **Run Update**, or **Run Audit**. Results appear in a color-coded table.
 
 ### 5. Download report
-Export results as a color-coded XLSX file for sharing or record-keeping.
+Export results as a color-coded XLSX file for sharing or record-keeping. Update and Compile modes also offer a **Download Updated Shopify CSV** that's ready to import directly into Shopify.
 
 ---
 
@@ -47,6 +47,14 @@ Export results as a color-coded XLSX file for sharing or record-keeping.
 | **Warning** | Data was populated but something needs attention (e.g. color option mismatch in Shopify) |
 | **Missing in Inv** | Shopify product could not be matched to any inventory row |
 | **Missing in Shpfy** | Inventory item has no corresponding Shopify product |
+
+### Update mode
+| Result | Meaning |
+|---|---|
+| **Updated** | One or more fields (UPC, weight, qty) changed and will be overwritten |
+| **No Change** | All values already match inventory — no update needed |
+| **Missing in Inv** | SKU exists in Shopify but not in inventory |
+| **Missing in Shpfy** | SKU exists in inventory but not in Shopify |
 
 ### Audit mode
 | Result | Meaning |
@@ -65,7 +73,7 @@ The app matches Shopify products to inventory rows using a combination of:
 - **Color** — Tries the title color suffix first (e.g. "Mirage"), then falls back to the Shopify Option1 value
 - **Size** — Combines Option2 and Option3 for bra sizing (e.g. "34" + "D" → "34D"); translates between inventory size codes (LRG, MED, SML) and Shopify sizes (L, M, S)
 
-In **Audit** mode, matching is done by SKU.
+In **Update** and **Audit** modes, matching is done by SKU.
 
 ---
 
@@ -83,6 +91,7 @@ Products that have different names between Shopify and your inventory system nee
 | Perfect Pima Pajama Shorts | Perfect Pima Short (Piping) |
 | Perfect Pima Pajama Shirt | Perfect Pima Short Sleeve Button Up (Piping) |
 | Perfect Pima Long Sleeve Pajama Shirt | Perfect Pima Long Sleeve Button Up (Piping) |
+| Cloud Cotton Retro Boxer Brief | Cloud Cotton Logo Boxer Brief |
 
 To add new mappings permanently, update the `nameMappings` array near the top of `index.html`. You can also add them temporarily via the Name Mappings section in the app UI.
 
