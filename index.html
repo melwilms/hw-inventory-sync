@@ -28,7 +28,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .card-locked .card-body { max-height: 0; opacity: 0; }
 
 /* Mode selector */
-.mode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.mode-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
 .mode-card { border: 2px solid #e8e8e8; border-radius: 10px; padding: 18px 20px; cursor: pointer; transition: all 0.18s; display: flex; flex-direction: row; align-items: center; gap: 16px; }
 .mode-card:hover { border-color: #aaa; background: #fafafa; }
 .mode-card.selected { border-color: #CFC7C1; background: #CFC7C1; color: #1a1a1a; }
@@ -123,6 +123,8 @@ tbody tr.r-missing   { background: #fff4eb; }
 .b-missing-i  { background: #fce4ec; color: #880e4f; }
 .b-nomatch    { background: #fff9c4; color: #b45309; }
 .b-invalid    { background: #f5f5f5; color: #bdbdbd; }
+.b-changed    { background: #e0f2fe; color: #0369a1; }
+.b-nochange   { background: #f5f5f5; color: #888; }
 
 .sku  { font-family: 'SFMono-Regular', Consolas, monospace; font-size: 11px; color: #555; }
 .sku-new { font-family: 'SFMono-Regular', Consolas, monospace; font-size: 11px; color: #065f46; font-weight: 600; }
@@ -161,6 +163,15 @@ tbody tr.r-missing   { background: #fff4eb; }
           <div class="mode-icon">📥</div>
           <div class="mode-title">Compile</div>
           <div class="mode-desc">Fill in SKU, UPC, weight &amp; qty for new products — matches blank Shopify rows to inventory</div>
+        </div>
+      </label>
+      <label class="mode-card" id="modeUpdate" for="radioUpdate">
+        <input type="radio" id="radioUpdate" name="appMode" value="update" onchange="setMode('update')" style="display:none">
+        <div class="mode-radio"><span class="mode-radio-dot"></span></div>
+        <div class="mode-content">
+          <div class="mode-icon">🔄</div>
+          <div class="mode-title">Update</div>
+          <div class="mode-desc">Refresh existing SKU data — matches on SKU and overwrites UPC, weight &amp; qty with latest inventory</div>
         </div>
       </label>
       <label class="mode-card" id="modeAudit" for="radioAudit">
@@ -289,6 +300,7 @@ let nameMappings = [
   { shopify: 'Perfect Pima Pajama Shorts',        inventory: 'Perfect Pima Short (Piping)'                 },
   { shopify: 'Perfect Pima Pajama Shirt',         inventory: 'Perfect Pima Short Sleeve Button Up (Piping)'},
   { shopify: 'Perfect Pima Long Sleeve Pajama Shirt', inventory: 'Perfect Pima Long Sleeve Button Up (Piping)' },
+  { shopify: 'Cloud Cotton Retro Boxer Brief',        inventory: 'Cloud Cotton Logo Boxer Brief'               },
 ];
 
 // =====================================================================
@@ -411,8 +423,10 @@ function setMode(mode) {
   if (appMode === mode) return;
   appMode = mode;
   document.getElementById('modeCompile').classList.toggle('selected', mode === 'compile');
-  document.getElementById('modeAudit').classList.toggle('selected', mode === 'audit');
+  document.getElementById('modeUpdate').classList.toggle('selected',  mode === 'update');
+  document.getElementById('modeAudit').classList.toggle('selected',   mode === 'audit');
   document.getElementById('radioCompile').checked = mode === 'compile';
+  document.getElementById('radioUpdate').checked  = mode === 'update';
   document.getElementById('radioAudit').checked   = mode === 'audit';
   // Unlock steps 2 and 3
   document.getElementById('uploadCard').classList.remove('card-locked');
@@ -470,7 +484,7 @@ function updateRunBtn() {
   const btn = document.getElementById('runBtn');
   const ready = appMode && shopifyData && inventoryData;
   btn.disabled = !ready;
-  btn.textContent = ready ? `▶  Run ${appMode === 'compile' ? 'Compile' : 'Audit'}`
+  btn.textContent = ready ? `▶  Run ${appMode === 'compile' ? 'Compile' : appMode === 'update' ? 'Update' : 'Audit'}`
                           : !appMode ? 'Select a mode to continue'
                           : 'Upload both files to run';
 }
@@ -617,7 +631,7 @@ function runComparison() {
     try { doComparison(); }
     finally {
       btn.disabled = false;
-      btn.textContent = `▶  Run ${appMode === 'compile' ? 'Compile' : 'Audit'}`;
+      btn.textContent = `▶  Run ${appMode === 'compile' ? 'Compile' : appMode === 'update' ? 'Update' : 'Audit'}`;
       btn.classList.remove('running');
     }
   }, 30);
@@ -694,6 +708,73 @@ function doComparison() {
     results.push(row);
   });
   } // end audit block
+
+  // ── UPDATE: Existing SKU rows → overwrite UPC, weight, qty ───────────
+  if (appMode === 'update') {
+  shpWithSku.forEach(shpRow => {
+    const sku      = cleanSku(shpRow['Variant SKU'] || '');
+    const shpTitle = shpRow['Title'] || '';
+    const inv      = invBySku.get(sku);
+
+    if (!inv) {
+      results.push({
+        sku, shpTitle, invStyle: '', invColor: '',
+        mode: 'update', isMissing: true, missingIn: 'inventory', hasChanges: false,
+        oldUpc: shpRow['Variant Barcode'] || '',           newUpc: '',
+        oldWt:  String(shpRow['Variant Weight'] || ''),   newWt:  '',
+        oldQty: String(shpRow['Variant Inventory Qty'] || ''), newQty: '',
+        upcChange: 'missing', wtChange: 'missing', qtyChange: 'missing',
+        _shpRow: shpRow,
+      });
+      return;
+    }
+
+    const oldUpc = String(shpRow['Variant Barcode'] || '').trim();
+    const newUpc = String(inv['UPC'] || '').trim();
+    const upcChange = normalize(oldUpc) === normalize(newUpc) ? 'same' : 'changed';
+
+    const oldWt  = String(shpRow['Variant Weight'] || '').trim();
+    const newWt  = String(inv['WeightInGrams'] || '').trim();
+    const wtChange = normalize(oldWt) === normalize(newWt) ? 'same' : 'changed';
+
+    const oldQty = String(shpRow['Variant Inventory Qty'] || '').trim();
+    const newQty = String(inv['TotalAvailable'] || '').trim();
+    // Compare as numbers so "0" === 0, "50.0" === "50"
+    const qtyChange = (Number(oldQty)||0) === (Number(newQty)||0) ? 'same' : 'changed';
+
+    const hasChanges = upcChange === 'changed' || wtChange === 'changed' || qtyChange === 'changed';
+
+    results.push({
+      sku, shpTitle,
+      invStyle: inv['Style'] || '', invColor: inv['Color'] || '',
+      mode: 'update', isMissing: false, hasChanges,
+      oldUpc, newUpc, upcChange,
+      oldWt,  newWt,  wtChange,
+      oldQty, newQty, qtyChange,
+      _shpRow: shpRow,
+      _invRow: inv,
+    });
+  });
+
+  // Flag inventory items not present in Shopify
+  const shpSkuSet = new Set(shpWithSku.map(r => cleanSku(r['Variant SKU'] || '')));
+  inventoryData.forEach(invRow => {
+    const k = cleanSku(invRow['CustomerSKU'] || '');
+    if (k && !shpSkuSet.has(k)) {
+      results.push({
+        sku: invRow['CustomerSKU'] || '',
+        shpTitle: '',
+        invStyle: invRow['Style'] || '', invColor: invRow['Color'] || '',
+        mode: 'update', isMissing: true, missingIn: 'shopify', hasChanges: false,
+        oldUpc: '', newUpc: invRow['UPC'] || '',
+        oldWt:  '', newWt:  invRow['WeightInGrams'] || '',
+        oldQty: '', newQty: invRow['TotalAvailable'] || '',
+        upcChange: 'missing', wtChange: 'missing', qtyChange: 'missing',
+        _invRow: invRow,
+      });
+    }
+  });
+  } // end update block
 
   // ── COMPILE: Blank SKU rows → populate ──────────────────────────────
   if (appMode === 'compile') {
@@ -784,11 +865,19 @@ function doComparison() {
   });
   } // end compile block
 
-  // Sort: missing first, then issues/warnings, then updated/clean
-  const order = { no_match:0, compare_issue:1, populated:2, compare_ok:3 };
+  // Sort: missing/issues first, then changes, then clean
   results.sort((a, b) => {
-    const aKey = a.mode==='no_match' ? 0 : a.mode==='compare' && a.hasIssue ? 1 : a.mode==='populated' ? 2 : 3;
-    const bKey = b.mode==='no_match' ? 0 : b.mode==='compare' && b.hasIssue ? 1 : b.mode==='populated' ? 2 : 3;
+    const sortKey = r => {
+      if (r.mode === 'no_match')                                          return 0;
+      if (r.mode === 'compare' && r.hasIssue)                            return 1;
+      if (r.mode === 'update' && r.isMissing && r.missingIn==='inventory') return 0;
+      if (r.mode === 'update' && r.hasChanges)                           return 1;
+      if (r.mode === 'update' && r.isMissing && r.missingIn==='shopify') return 3;
+      if (r.mode === 'update')                                            return 2;
+      if (r.mode === 'populated')                                        return 2;
+      return 3;
+    };
+    const aKey = sortKey(a), bKey = sortKey(b);
     if (aKey !== bKey) return aKey - bKey;
     return String(a.sku).localeCompare(String(b.sku));
   });
@@ -807,11 +896,15 @@ function renderResults() {
   const updated    = results.filter(r => r.mode === 'populated' && !r.hasIssue).length;
   const warnings   = results.filter(r => r.mode === 'populated' && r.hasIssue).length;
   const noMatch    = results.filter(r => r.mode === 'no_match').length;
-  const clean      = results.filter(r => r.mode === 'compare' && !r.hasIssue && !r.isMissing).length;
-  const issues     = results.filter(r => r.mode === 'compare' && r.hasIssue).length;
-  const pnMis      = results.filter(r => r.mode === 'compare' && r.pn === 'Mismatch').length;
-  const misShp     = results.filter(r => r.mode === 'missing_shpfy' || (r.mode === 'compare' && r.pn === 'Missing in Shopify')).length;
+  const clean       = results.filter(r => r.mode === 'compare' && !r.hasIssue && !r.isMissing).length;
+  const issues      = results.filter(r => r.mode === 'compare' && r.hasIssue).length;
+  const pnMis       = results.filter(r => r.mode === 'compare' && r.pn === 'Mismatch').length;
+  const misShp      = results.filter(r => r.mode === 'missing_shpfy' || (r.mode === 'compare' && r.pn === 'Missing in Shopify')).length;
   const misInvAudit = results.filter(r => r.mode === 'compare' && r.pn === 'Missing in Inventory').length;
+  const updChanged  = results.filter(r => r.mode === 'update' && !r.isMissing && r.hasChanges).length;
+  const updSame     = results.filter(r => r.mode === 'update' && !r.isMissing && !r.hasChanges).length;
+  const updMissInv  = results.filter(r => r.mode === 'update' && r.isMissing && r.missingIn === 'inventory').length;
+  const updMissShp  = results.filter(r => r.mode === 'update' && r.isMissing && r.missingIn === 'shopify').length;
 
   const compileTiles = [
     { cls:'',         key:'all',       num:total,    lbl:'Total'            },
@@ -828,7 +921,14 @@ function renderResults() {
     { cls:'c-orange', key:'missing',     num:misShp,       lbl:'Missing in Shpfy' },
     { cls:'c-purple', key:'pn',          num:pnMis,        lbl:'Product Name'     },
   ];
-  const tiles = appMode === 'compile' ? compileTiles : auditTiles;
+  const updateTiles = [
+    { cls:'',         key:'all',          num:total,       lbl:'Total'            },
+    { cls:'c-teal',   key:'upd_changed',  num:updChanged,  lbl:'Updated'          },
+    { cls:'c-green',  key:'upd_same',     num:updSame,     lbl:'No Change'        },
+    { cls:'c-yellow', key:'upd_miss_inv', num:updMissInv,  lbl:'Missing in Inv'   },
+    { cls:'c-pink',   key:'upd_miss_shp', num:updMissShp,  lbl:'Missing in Shpfy' },
+  ];
+  const tiles = appMode === 'compile' ? compileTiles : appMode === 'update' ? updateTiles : auditTiles;
 
   document.getElementById('statsRow').innerHTML = tiles.map(s => `
     <div class="stat-tile ${s.cls} ${activeFilter===s.key?'active':''}" onclick="setFilter('${s.key}')">
@@ -850,7 +950,14 @@ function renderResults() {
     { key:'missing_inv', label:`Missing in Inv (${misInvAudit})`      },
     { key:'missing',     label:`Missing in Shpfy (${misShp})`         },
   ];
-  const chips = appMode === 'compile' ? compileChips : auditChips;
+  const updateChips = [
+    { key:'all',          label:`All (${total})`                    },
+    { key:'upd_changed',  label:`↻ Updated (${updChanged})`         },
+    { key:'upd_same',     label:`✓ No Change (${updSame})`          },
+    { key:'upd_miss_inv', label:`Missing in Inv (${updMissInv})`    },
+    { key:'upd_miss_shp', label:`Missing in Shpfy (${updMissShp})`  },
+  ];
+  const chips = appMode === 'compile' ? compileChips : appMode === 'update' ? updateChips : auditChips;
   document.getElementById('filterRow').innerHTML = chips.map(c =>
     `<button class="chip ${activeFilter===c.key?'active':''}" onclick="setFilter('${c.key}')">${c.label}</button>`
   ).join('');
@@ -871,6 +978,17 @@ function renderExport() {
       <p style="font-size:11px; color:#bbb; margin-top:10px;">
         <strong>Updated Shopify CSV</strong> — matched rows are populated with SKU, UPC, weight &amp; qty. A <em>_Sync Notes</em> column flags warnings needing review.<br>
         <strong>Compile Report</strong> — full breakdown of every row including match status and any warnings.
+      </p>`;
+  } else if (appMode === 'update') {
+    el.innerHTML = `
+      <div class="card-label">Export</div>
+      <div class="export-row">
+        <button class="exp-btn exp-primary" onclick="downloadUpdatedShopify()">⬇&nbsp; Download Updated Shopify CSV</button>
+        <button class="exp-btn exp-secondary" onclick="downloadReport()">⬇&nbsp; Download Update Report</button>
+      </div>
+      <p style="font-size:11px; color:#bbb; margin-top:10px;">
+        <strong>Updated Shopify CSV</strong> — all rows with UPC, weight &amp; qty overwritten from latest inventory. Ready to import into Shopify.<br>
+        <strong>Update Report</strong> — full breakdown showing old vs new values for every changed field, color-coded for easy review.
       </p>`;
   } else {
     el.innerHTML = `
@@ -896,6 +1014,10 @@ function getFiltered() {
     case 'missing_inv': return results.filter(r => r.mode === 'compare' && r.pn === 'Missing in Inventory');
     case 'missing':     return results.filter(r => r.mode === 'missing_shpfy' || (r.mode === 'compare' && r.pn === 'Missing in Shopify'));
     case 'pn':          return results.filter(r => r.mode === 'compare' && r.pn === 'Mismatch');
+    case 'upd_changed': return results.filter(r => r.mode === 'update' && !r.isMissing && r.hasChanges);
+    case 'upd_same':    return results.filter(r => r.mode === 'update' && !r.isMissing && !r.hasChanges);
+    case 'upd_miss_inv':return results.filter(r => r.mode === 'update' && r.isMissing && r.missingIn === 'inventory');
+    case 'upd_miss_shp':return results.filter(r => r.mode === 'update' && r.isMissing && r.missingIn === 'shopify');
     default:            return results;
   }
 }
@@ -910,13 +1032,24 @@ function renderTable() {
   }
 
   document.getElementById('resultsBody').innerHTML = filtered.map(r => {
-    const rowCls = r.mode==='populated' && !r.hasIssue            ? 'r-populated'
-                 : r.mode==='populated' && r.hasIssue             ? 'r-bad'
-                 : r.mode==='no_match'                            ? 'r-nomatch'
-                 : r.mode==='missing_shpfy'                       ? 'r-missing'
-                 : r.pn==='Missing in Shopify'                    ? 'r-missing'
-                 : r.hasIssue                                     ? 'r-bad'
+    const rowCls = r.mode==='populated' && !r.hasIssue                              ? 'r-populated'
+                 : r.mode==='populated' && r.hasIssue                               ? 'r-bad'
+                 : r.mode==='no_match'                                              ? 'r-nomatch'
+                 : r.mode==='missing_shpfy'                                         ? 'r-missing'
+                 : r.pn==='Missing in Shopify'                                      ? 'r-missing'
+                 : r.mode==='update' && r.isMissing && r.missingIn==='inventory'    ? 'r-nomatch'
+                 : r.mode==='update' && r.isMissing && r.missingIn==='shopify'      ? 'r-missing'
+                 : r.mode==='update' && r.hasChanges                                ? 'r-populated'
+                 : r.mode==='update'                                                ? 'r-ok'
+                 : r.hasIssue                                                       ? 'r-bad'
                  : 'r-ok';
+
+    // Update mode: helper to show old → new or no-change
+    const showUpdate = (change, oldVal, newVal) => {
+      if (change === 'missing') return `<span class="b b-nomatch">Missing</span>`;
+      if (change === 'changed') return `<span class="b b-changed">↻ ${esc(String(newVal))}</span><div class="detail">${esc(String(oldVal))} → ${esc(String(newVal))}</div>`;
+      return `<span class="b b-nochange">${esc(String(newVal))}</span>`;
+    };
 
     const skuCell = r.mode === 'populated'
       ? `<span class="sku-new">★ ${esc(r.sku)}</span><div class="detail">updated</div>`
@@ -941,6 +1074,22 @@ function renderTable() {
                    : '';
       return badge(field) + detail;
     };
+
+    if (r.mode === 'update') {
+      const missingInv = r.isMissing && r.missingIn === 'inventory';
+      const missingShp = r.isMissing && r.missingIn === 'shopify';
+      return `<tr class="${rowCls}">
+        <td>${esc(r.sku) || '<em style="color:#ccc">—</em>'}</td>
+        <td>${r.shpTitle ? esc(r.shpTitle) : '<em style="color:#ccc">Not in Shopify</em>'}</td>
+        <td>${r.invStyle ? esc(r.invStyle) + (r.invColor ? `<span style="color:#aaa"> / ${esc(r.invColor)}</span>` : '') : '<em style="color:#ccc">—</em>'}</td>
+        <td>${missingInv ? `<span class="b b-nomatch">Missing in Inv</span>` : missingShp ? `<span class="b b-missing-s">Missing in Shpfy</span>` : r.hasChanges ? `<span class="b b-changed">↻ Updated</span>` : `<span class="b b-nochange">No Change</span>`}</td>
+        <td>${showUpdate(r.upcChange, r.oldUpc, r.newUpc)}</td>
+        <td><em style="color:#ccc">—</em></td>
+        <td><em style="color:#ccc">—</em></td>
+        <td>${showUpdate(r.wtChange,  r.oldWt,  r.newWt)}</td>
+        <td>${showUpdate(r.qtyChange, r.oldQty, r.newQty)}</td>
+      </tr>`;
+    }
 
     return `<tr class="${rowCls}">
       <td>${skuCell}</td>
@@ -985,6 +1134,10 @@ function rowColors(r) {
   if (r.mode === 'populated' && r.hasIssue)  return { bg: 'FFFFF3E0', fg: 'FFB45309' }; // amber
   if (r.mode === 'no_match')                 return { bg: 'FFFFF8E1', fg: 'FFB45309' }; // yellow
   if (r.mode === 'missing_shpfy')            return { bg: 'FFFCE4EC', fg: 'FF880E4F' }; // pink
+  if (r.mode === 'update' && r.isMissing && r.missingIn==='inventory') return { bg: 'FFFFF8E1', fg: 'FFB45309' };
+  if (r.mode === 'update' && r.isMissing && r.missingIn==='shopify')   return { bg: 'FFFCE4EC', fg: 'FF880E4F' };
+  if (r.mode === 'update' && r.hasChanges)   return { bg: 'FFE0F2FE', fg: 'FF0369A1' }; // blue
+  if (r.mode === 'update')                   return { bg: 'FFFFFFFF', fg: 'FF888888' }; // gray no-change
   if (r.mode === 'compare' && r.isMissing && r.pn === 'Missing in Inventory') return { bg: 'FFFFF8E1', fg: 'FFB45309' }; // yellow
   if (r.mode === 'compare' && r.isMissing && r.pn === 'Missing in Shopify')   return { bg: 'FFFFF4EB', fg: 'FFE65100' }; // orange
   if (r.mode === 'compare' && r.hasIssue)    return { bg: 'FFFFEBEE', fg: 'FFC62828' }; // red
@@ -1020,7 +1173,51 @@ async function xlsxDownload(workbook, filename) {
 }
 
 async function downloadReport() {
-  appMode === 'compile' ? await downloadCompileReport() : await downloadAuditReport();
+  if (appMode === 'compile') await downloadCompileReport();
+  else if (appMode === 'update') await downloadUpdateReport();
+  else await downloadAuditReport();
+}
+
+async function downloadUpdateReport() {
+  const wb = new ExcelJS.Workbook();
+  wb.creator = 'Harper Wilde Inventory Sync';
+  const ws = wb.addWorksheet('Update Report');
+  ws.columns = [
+    { header: 'Status',          key: 'status',    width: 18 },
+    { header: 'SKU',             key: 'sku',        width: 26 },
+    { header: 'Shopify Title',   key: 'title',      width: 36 },
+    { header: 'Inventory Style', key: 'style',      width: 28 },
+    { header: 'UPC Change',      key: 'upcChange',  width: 12 },
+    { header: 'Old UPC',         key: 'oldUpc',     width: 18 },
+    { header: 'New UPC',         key: 'newUpc',     width: 18 },
+    { header: 'Weight Change',   key: 'wtChange',   width: 14 },
+    { header: 'Old Weight (g)',  key: 'oldWt',      width: 14 },
+    { header: 'New Weight (g)',  key: 'newWt',      width: 14 },
+    { header: 'Qty Change',      key: 'qtyChange',  width: 12 },
+    { header: 'Old Qty',         key: 'oldQty',     width: 10 },
+    { header: 'New Qty',         key: 'newQty',     width: 10 },
+  ];
+  styleSheet(ws);
+
+  const changeLabel = c => c === 'changed' ? 'Changed' : c === 'missing' ? 'Missing' : 'No Change';
+
+  results.forEach(r => {
+    const status = r.isMissing && r.missingIn === 'inventory' ? 'Missing in Inv'
+                 : r.isMissing && r.missingIn === 'shopify'   ? 'Missing in Shpfy'
+                 : r.hasChanges ? 'Updated' : 'No Change';
+    const row = ws.addRow({
+      status,
+      sku:       r.sku,
+      title:     r.shpTitle,
+      style:     r.invStyle,
+      upcChange: changeLabel(r.upcChange),  oldUpc: r.oldUpc,  newUpc: r.newUpc,
+      wtChange:  changeLabel(r.wtChange),   oldWt:  r.oldWt,   newWt:  r.newWt,
+      qtyChange: changeLabel(r.qtyChange),  oldQty: r.oldQty,  newQty: r.newQty,
+    });
+    applyRowColor(row, rowColors(r));
+  });
+
+  await xlsxDownload(wb, `Update_Report_${today()}.xlsx`);
 }
 
 async function downloadCompileReport() {
@@ -1119,6 +1316,38 @@ async function downloadAuditReport() {
 }
 
 function downloadUpdatedShopify() {
+  // ── UPDATE mode: overwrite UPC, weight, qty by SKU match ──────────────
+  if (appMode === 'update') {
+    const updMap = new Map();
+    results.forEach(r => { if (r.mode === 'update' && !r.isMissing) updMap.set(cleanSku(r.sku), r); });
+
+    const updated = shopifyData.map(shpRow => {
+      const out = { ...shpRow };
+      const key = cleanSku(shpRow['Variant SKU'] || '');
+      const r   = updMap.get(key);
+      if (r && r._invRow) {
+        out['Variant Barcode']       = r._invRow['UPC']            || out['Variant Barcode'];
+        out['Variant Weight']        = r._invRow['WeightInGrams']  || out['Variant Weight'];
+        out['Variant Weight Unit']   = 'g';
+        out['Variant Inventory Qty'] = r._invRow['TotalAvailable'] ?? out['Variant Inventory Qty'];
+        const changes = [];
+        if (r.upcChange === 'changed') changes.push(`UPC: ${r.oldUpc} → ${r.newUpc}`);
+        if (r.wtChange  === 'changed') changes.push(`Weight: ${r.oldWt} → ${r.newWt}g`);
+        if (r.qtyChange === 'changed') changes.push(`Qty: ${r.oldQty} → ${r.newQty}`);
+        out['_Sync Notes'] = changes.join(' | ');
+      } else if (!r) {
+        out['_Sync Notes'] = 'Missing in inventory — needs manual review';
+      } else {
+        out['_Sync Notes'] = '';
+      }
+      return out;
+    });
+
+    downloadCSV(updated, `Shopify_Updated_${today()}.csv`);
+    return;
+  }
+
+  // ── COMPILE mode: populate blank rows ─────────────────────────────────
   // Build issue notes for existing-SKU rows
   const issueNotes = new Map();
   results.forEach(r => {
