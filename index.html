@@ -1322,10 +1322,12 @@ function downloadUpdatedShopify() {
     const updMap = new Map();
     results.forEach(r => { if (r.mode === 'update' && !r.isMissing) updMap.set(cleanSku(r.sku), r); });
 
-    const updated = shopifyData.map(shpRow => {
-      const out = { ...shpRow };
+    const updated = shopifyData.reduce((acc, shpRow) => {
       const key = cleanSku(shpRow['Variant SKU'] || '');
       const r   = updMap.get(key);
+      // Skip rows with no changes — only include changed or missing rows
+      if (r && !r.hasChanges) return acc;
+      const out = { ...shpRow };
       if (r && r._invRow) {
         out['Variant Barcode']       = r._invRow['UPC']            || out['Variant Barcode'];
         out['Variant Weight']        = r._invRow['WeightInGrams']  || out['Variant Weight'];
@@ -1338,11 +1340,10 @@ function downloadUpdatedShopify() {
         out['_Sync Notes'] = changes.join(' | ');
       } else if (!r) {
         out['_Sync Notes'] = 'Missing in inventory — needs manual review';
-      } else {
-        out['_Sync Notes'] = '';
       }
-      return out;
-    });
+      acc.push(out);
+      return acc;
+    }, []);
 
     downloadCSV(updated, `Products_Shopify_Updated_${today()}.csv`);
     return;
