@@ -260,7 +260,7 @@ tbody tr.r-missing   { background: #fff4eb; }
               <th style="min-width:160px;">SKU</th>
               <th style="min-width:200px;">Shopify Title</th>
               <th style="min-width:180px;">Inventory Style</th>
-              <th style="min-width:110px;">Product Name</th>
+              <th style="min-width:110px;" id="colHeader4">Product Name</th>
               <th style="min-width:90px;">UPC</th>
               <th style="min-width:80px;">Color</th>
               <th style="min-width:80px;">Size</th>
@@ -1025,6 +1025,7 @@ function getFiltered() {
 function renderTable() {
   const filtered = getFiltered();
   document.getElementById('tableMeta').textContent = `Showing ${filtered.length.toLocaleString()} of ${results.length.toLocaleString()} rows`;
+  document.getElementById('colHeader4').textContent = appMode === 'update' ? 'Row Status' : 'Product Name';
 
   if (!filtered.length) {
     document.getElementById('resultsBody').innerHTML = `<tr><td colspan="8" class="empty-msg">🎉 No rows match this filter</td></tr>`;
@@ -1343,7 +1344,7 @@ function downloadUpdatedShopify() {
       return out;
     });
 
-    downloadCSV(updated, `Shopify_Updated_${today()}.csv`);
+    downloadCSV(updated, `Products_Shopify_Updated_${today()}.csv`);
     return;
   }
 
@@ -1407,7 +1408,7 @@ function downloadUpdatedShopify() {
     return out;
   });
 
-  downloadCSV(updated, `Shopify_Updated_${today()}.csv`);
+  downloadCSV(updated, `Products_Shopify_Updated_${today()}.csv`);
 }
 
 function today() { return new Date().toISOString().slice(0,10); }
