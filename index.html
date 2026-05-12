@@ -662,6 +662,16 @@ function fieldCompare(invVal, shpVal, inInv, inShp) {
   return n1 === n2 ? 'Match' : 'Mismatch';
 }
 
+// Weight comparison rounds to 1 decimal — Shopify stores weights at 1dp precision
+function weightCompare(invWt, shpWt, inInv, inShp) {
+  if (inInv && !inShp) return 'Missing in Shopify';
+  if (!inInv && inShp) return 'Missing in Inventory';
+  const inv = parseFloat(invWt), shp = parseFloat(shpWt);
+  if (isNaN(inv) && isNaN(shp)) return 'Invalid';
+  if (isNaN(inv)  || isNaN(shp))  return 'Invalid';
+  return Math.round(inv * 10) === Math.round(shp * 10) ? 'Match' : 'Mismatch';
+}
+
 // =====================================================================
 // COMPARISON
 // =====================================================================
@@ -741,7 +751,7 @@ function doComparison() {
     }
 
     row.invWt  = inv?.['WeightInGrams'] || '';  row.shpWt  = shp?.['Variant Weight'] || '';
-    row.weight = fieldCompare(row.invWt,   row.shpWt,   inInv, inShp);
+    row.weight = fieldCompare(row.invWt, row.shpWt, inInv, inShp);
 
     row.invQty = inv?.['TotalAvailable'] || ''; row.shpQty = shp?.['Variant Inventory Qty'] || '';
     row.qty    = fieldCompare(row.invQty,  row.shpQty,  inInv, inShp);
@@ -1044,8 +1054,8 @@ function renderExport() {
         <div class="field-options" style="flex-wrap:wrap; gap:12px 28px;">
           <label class="field-option"><input type="checkbox" ${exportColumns.sku          ? 'checked' : ''} onchange="exportColumns.sku          = this.checked"> Variant SKU</label>
           <label class="field-option"><input type="checkbox" ${exportColumns.barcode      ? 'checked' : ''} onchange="exportColumns.barcode      = this.checked"> Variant Barcode</label>
-          <label class="field-option"><input type="checkbox" ${exportColumns.weight       ? 'checked' : ''} onchange="exportColumns.weight       = this.checked"> Variant Weight</label>
-          <label class="field-option"><input type="checkbox" ${exportColumns.weightUnit   ? 'checked' : ''} onchange="exportColumns.weightUnit   = this.checked"> Variant Weight Unit</label>
+          <label class="field-option"><input type="checkbox" ${exportColumns.weight ? 'checked' : ''} onchange="exportColumns.weight = this.checked; exportColumns.weightUnit = this.checked; renderExport()"> Variant Weight</label>
+          <label class="field-option" title="Always included with Variant Weight"><input type="checkbox" checked disabled style="opacity:0.4; cursor:not-allowed;"> Variant Weight Unit <span class="field-desc">— always paired with Weight</span></label>
           <label class="field-option"><input type="checkbox" ${exportColumns.price        ? 'checked' : ''} onchange="exportColumns.price        = this.checked"> Variant Price</label>
           <label class="field-option"><input type="checkbox" ${exportColumns.comparePrice ? 'checked' : ''} onchange="exportColumns.comparePrice = this.checked"> Variant Compare At Price</label>
           <label class="field-option"><input type="checkbox" ${exportColumns.taxable      ? 'checked' : ''} onchange="exportColumns.taxable      = this.checked"> Variant Taxable</label>
@@ -1076,6 +1086,8 @@ function setFilter(f) { activeFilter = f; renderResults(); }
 
 function setAllExportColumns(val) {
   Object.keys(exportColumns).forEach(k => exportColumns[k] = val);
+  // weightUnit must always follow weight
+  exportColumns.weightUnit = exportColumns.weight;
   renderExport();
 }
 
