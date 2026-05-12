@@ -56,6 +56,12 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .file-tag { background: #e8f5e9; color: #2e7d32; border-radius: 4px; padding: 3px 8px; font-size: 11px; font-weight: 500; }
 input[type=file] { display: none; }
 
+/* Update field options */
+.field-options { display: flex; gap: 24px; flex-wrap: wrap; padding: 4px 0 8px; }
+.field-option { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; font-weight: 500; color: #333; user-select: none; }
+.field-option input[type=checkbox] { display: inline; width: 16px; height: 16px; accent-color: #1a1a1a; cursor: pointer; }
+.field-option .field-desc { font-size: 11px; color: #aaa; font-weight: 400; margin-left: 2px; }
+
 /* Mappings */
 .mapping-toggle { cursor: pointer; }
 .mapping-toggle-icon { transition: transform 0.2s; display: inline-block; }
@@ -217,12 +223,34 @@ tbody tr.r-missing   { background: #fff4eb; }
     </div><!-- end card-body -->
   </div>
 
+  <!-- Update Field Options -->
+  <div class="card card-locked" id="updateFieldsCard">
+    <div class="card-label">3 — Fields to Update</div>
+    <div class="card-body">
+      <p class="mapping-hint">Choose which fields should be overwritten with inventory data. Uncheck any fields you want to leave as-is in Shopify.</p>
+      <div class="field-options">
+        <label class="field-option">
+          <input type="checkbox" id="fieldUpc" checked onchange="updateFields.upc = this.checked">
+          UPC <span class="field-desc">/ Barcode</span>
+        </label>
+        <label class="field-option">
+          <input type="checkbox" id="fieldWeight" checked onchange="updateFields.weight = this.checked">
+          Weight
+        </label>
+        <label class="field-option">
+          <input type="checkbox" id="fieldQty" checked onchange="updateFields.qty = this.checked">
+          Quantity <span class="field-desc">— uncheck if inventory qty lags behind Shopify</span>
+        </label>
+      </div>
+    </div>
+  </div>
+
   <!-- Name Mappings -->
   <div class="card card-locked" id="mappingsCard">
     <div class="card-label">
       <span class="mapping-toggle" onclick="toggleMappings()">
         <span class="mapping-toggle-icon closed" id="mappingArrow">▼</span>
-        &nbsp;3 — Name Mappings
+        &nbsp;4 — Name Mappings
         <span style="font-size:10px; color:#bbb; font-weight:400; text-transform:none; letter-spacing:0; margin-left:6px;">when a product name differs between Shopify and your inventory system</span>
       </span>
     </div>
@@ -282,7 +310,8 @@ tbody tr.r-missing   { background: #fff4eb; }
 // =====================================================================
 // STATE
 // =====================================================================
-let appMode       = null;  // 'compile' | 'audit'
+let appMode       = null;  // 'compile' | 'update' | 'audit'
+let updateFields  = { upc: true, weight: true, qty: true };
 let shopifyData   = null;
 let inventoryData = null;
 let invFileNames  = [];
@@ -428,9 +457,17 @@ function setMode(mode) {
   document.getElementById('radioCompile').checked = mode === 'compile';
   document.getElementById('radioUpdate').checked  = mode === 'update';
   document.getElementById('radioAudit').checked   = mode === 'audit';
-  // Unlock steps 2 and 3
+  // Unlock steps 2, 3, 4
   document.getElementById('uploadCard').classList.remove('card-locked');
   document.getElementById('mappingsCard').classList.remove('card-locked');
+  // Update Fields card only unlocks in Update mode
+  document.getElementById('updateFieldsCard').classList.toggle('card-locked', mode !== 'update');
+  // Reset field checkboxes to defaults when switching modes
+  updateFields = { upc: true, weight: true, qty: true };
+  ['fieldUpc','fieldWeight','fieldQty'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.checked = true;
+  });
   resetUploads();
   updateRunBtn();
 }
@@ -471,9 +508,10 @@ function resetUploads() {
   iz.onclick = () => document.getElementById('inventoryInput').click();
   // Do NOT call setupDrop here — drag listeners are registered once in DOMContentLoaded
 
-  // Re-lock steps 2 & 3 only if no mode selected (full reset)
+  // Re-lock steps 2, 3, 4 only if no mode selected (full reset)
   if (!appMode) {
     document.getElementById('uploadCard').classList.add('card-locked');
+    document.getElementById('updateFieldsCard').classList.add('card-locked');
     document.getElementById('mappingsCard').classList.add('card-locked');
   }
   // Hide results
@@ -493,6 +531,7 @@ function updateRunBtn() {
 // UTILITIES
 // =====================================================================
 function cleanSku(v)   { return String(v || '').toUpperCase().replace(/[\s-]/g, ''); }
+function cleanBarcode(v) { return String(v || '').trim().replace(/\.0+$/, ''); }
 function esc(s)        { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 function normalize(v) {
@@ -680,7 +719,11 @@ function doComparison() {
                : !inInv && inShp ? 'Missing in Inventory'
                : checkProductName(invStyle, shpTitle, invToShp);
 
-    row.invUpc = inv?.['UPC'] || '';           row.shpUpc = shp?.['Variant Barcode'] || '';
+    row.invUpc = inv?.['UPC'] || '';
+    const rawShpUpc = shp?.['Variant Barcode'] || '';
+    row.shpUpcRaw = rawShpUpc;
+    row.shpUpc = cleanBarcode(rawShpUpc);  // strip trailing .0 for comparison
+    row.upcDotZero = rawShpUpc !== row.shpUpc; // flag if .0 was present
     row.upc    = fieldCompare(row.invUpc,  row.shpUpc,  inInv, inShp);
 
     row.invColor = inv?.['Color'] || '';       row.shpColor = shp?.['Option1 Value'] || '';
@@ -729,18 +772,23 @@ function doComparison() {
       return;
     }
 
-    const oldUpc = String(shpRow['Variant Barcode'] || '').trim();
+    const oldUpcRaw = String(shpRow['Variant Barcode'] || '').trim();
+    const oldUpc = cleanBarcode(oldUpcRaw);  // strip .0 for comparison
+    const upcDotZero = oldUpcRaw !== oldUpc; // flag if .0 was present
     const newUpc = String(inv['UPC'] || '').trim();
-    const upcChange = normalize(oldUpc) === normalize(newUpc) ? 'same' : 'changed';
+    // Only compare fields that are selected — unselected fields always show 'skipped'
+    const upcChange = !updateFields.upc    ? 'skipped'
+                    : normalize(oldUpc) === normalize(newUpc) ? 'same' : 'changed';
 
     const oldWt  = String(shpRow['Variant Weight'] || '').trim();
     const newWt  = String(inv['WeightInGrams'] || '').trim();
-    const wtChange = normalize(oldWt) === normalize(newWt) ? 'same' : 'changed';
+    const wtChange  = !updateFields.weight ? 'skipped'
+                    : normalize(oldWt) === normalize(newWt) ? 'same' : 'changed';
 
     const oldQty = String(shpRow['Variant Inventory Qty'] || '').trim();
     const newQty = String(inv['TotalAvailable'] || '').trim();
-    // Compare as numbers so "0" === 0, "50.0" === "50"
-    const qtyChange = (Number(oldQty)||0) === (Number(newQty)||0) ? 'same' : 'changed';
+    const qtyChange = !updateFields.qty    ? 'skipped'
+                    : (Number(oldQty)||0) === (Number(newQty)||0) ? 'same' : 'changed';
 
     const hasChanges = upcChange === 'changed' || wtChange === 'changed' || qtyChange === 'changed';
 
@@ -748,6 +796,7 @@ function doComparison() {
       sku, shpTitle,
       invStyle: inv['Style'] || '', invColor: inv['Color'] || '',
       mode: 'update', isMissing: false, hasChanges,
+      upcDotZero,
       oldUpc, newUpc, upcChange,
       oldWt,  newWt,  wtChange,
       oldQty, newQty, qtyChange,
@@ -1047,6 +1096,7 @@ function renderTable() {
 
     // Update mode: helper to show old → new or no-change
     const showUpdate = (change, oldVal, newVal) => {
+      if (change === 'skipped') return `<em style="color:#ccc">—</em>`;
       if (change === 'missing') return `<span class="b b-nomatch">Missing</span>`;
       if (change === 'changed') return `<span class="b b-changed">↻ ${esc(String(newVal))}</span><div class="detail">${esc(String(oldVal))} → ${esc(String(newVal))}</div>`;
       return `<span class="b b-nochange">${esc(String(newVal))}</span>`;
@@ -1084,7 +1134,7 @@ function renderTable() {
         <td>${r.shpTitle ? esc(r.shpTitle) : '<em style="color:#ccc">Not in Shopify</em>'}</td>
         <td>${r.invStyle ? esc(r.invStyle) + (r.invColor ? `<span style="color:#aaa"> / ${esc(r.invColor)}</span>` : '') : '<em style="color:#ccc">—</em>'}</td>
         <td>${missingInv ? `<span class="b b-nomatch">Missing in Inv</span>` : missingShp ? `<span class="b b-missing-s">Missing in Shpfy</span>` : r.hasChanges ? `<span class="b b-changed">↻ Updated</span>` : `<span class="b b-nochange">No Change</span>`}</td>
-        <td>${showUpdate(r.upcChange, r.oldUpc, r.newUpc)}</td>
+        <td>${showUpdate(r.upcChange, r.oldUpc, r.newUpc)}${r.upcDotZero ? `<div class="detail" style="color:#b45309">⚠ Barcode had trailing ".0" — fixed in output</div>` : ''}</td>
         <td><em style="color:#ccc">—</em></td>
         <td><em style="color:#ccc">—</em></td>
         <td>${showUpdate(r.wtChange,  r.oldWt,  r.newWt)}</td>
@@ -1097,7 +1147,7 @@ function renderTable() {
       <td>${esc(r.shpTitle)}${r.titleFormatIssue ? `<div class="detail" style="color:#b45309">⚠ Title format issue in Shopify — missing space after dash (e.g. "Shirt -Blue" → "Shirt - Blue")</div>` : ''}</td>
       <td>${r.invStyle ? esc(r.invStyle) + (r.invColor ? `<span style="color:#aaa"> / ${esc(r.invColor)}</span>` : '') : '<em style="color:#ccc">—</em>'}</td>
       <td>${r.mode==='compare' ? (badge(r.pn) + (r.pn==='Mismatch'?`<div class="detail">Inv: ${esc(r.invStyle)}</div>`:'')) : (r.mode==='populated'?`<span class="b b-populated">✓</span>`:`<span class="b b-nomatch">No Match</span>`)}</td>
-      <td>${showVal(r.upc,    r.invUpc,   r.shpUpc)}</td>
+      <td>${showVal(r.upc, r.invUpc, r.shpUpc)}${r.upcDotZero ? `<div class="detail" style="color:#b45309">⚠ Barcode has trailing ".0" in Shopify — fix in Shopify admin</div>` : ''}</td>
       <td>${showVal(r.color,  r.invColor, r.shpColor)}</td>
       <td>${showVal(r.size,   r.invSize,  r.shpSize)}</td>
       <td>${showVal(r.weight, r.invWt,    r.shpWt)}</td>
@@ -1200,7 +1250,7 @@ async function downloadUpdateReport() {
   ];
   styleSheet(ws);
 
-  const changeLabel = c => c === 'changed' ? 'Changed' : c === 'missing' ? 'Missing' : 'No Change';
+  const changeLabel = c => c === 'changed' ? 'Changed' : c === 'missing' ? 'Missing' : c === 'skipped' ? '—' : 'No Change';
 
   results.forEach(r => {
     const status = r.isMissing && r.missingIn === 'inventory' ? 'Missing in Inv'
@@ -1329,16 +1379,18 @@ function downloadUpdatedShopify() {
       if (r && !r.hasChanges) return acc;
       const out = { ...shpRow };
       if (r && r._invRow) {
-        out['Variant Barcode']       = r._invRow['UPC']            || out['Variant Barcode'];
-        out['Variant Weight']        = r._invRow['WeightInGrams']  || out['Variant Weight'];
-        out['Variant Weight Unit']   = 'g';
-        out['Variant Inventory Qty'] = r._invRow['TotalAvailable'] ?? out['Variant Inventory Qty'];
+        if (updateFields.upc)    out['Variant Barcode']       = r._invRow['UPC']            || out['Variant Barcode'];
+        if (updateFields.weight) { out['Variant Weight']      = r._invRow['WeightInGrams']  || out['Variant Weight'];
+                                   out['Variant Weight Unit'] = 'g'; }
+        if (updateFields.qty)    out['Variant Inventory Qty'] = r._invRow['TotalAvailable'] ?? out['Variant Inventory Qty'];
         const changes = [];
         if (r.upcChange === 'changed') changes.push(`UPC: ${r.oldUpc} → ${r.newUpc}`);
         if (r.wtChange  === 'changed') changes.push(`Weight: ${r.oldWt} → ${r.newWt}g`);
         if (r.qtyChange === 'changed') changes.push(`Qty: ${r.oldQty} → ${r.newQty}`);
         out['_Sync Notes'] = changes.join(' | ');
       } else if (!r) {
+        // Still clean up any .0 barcode even for missing rows
+        out['Variant Barcode'] = cleanBarcode(out['Variant Barcode'] || '');
         out['_Sync Notes'] = 'Missing in inventory — needs manual review';
       }
       acc.push(out);
