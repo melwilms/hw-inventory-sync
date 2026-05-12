@@ -312,6 +312,7 @@ tbody tr.r-missing   { background: #fff4eb; }
 // =====================================================================
 let appMode       = null;  // 'compile' | 'update' | 'audit'
 let updateFields  = { upc: true, weight: true, qty: true };
+let exportColumns = { sku: true, barcode: true, weight: true, weightUnit: true, price: true, comparePrice: true, taxable: true, inventoryQty: true };
 let shopifyData   = null;
 let inventoryData = null;
 let invFileNames  = [];
@@ -463,7 +464,8 @@ function setMode(mode) {
   // Update Fields card only unlocks in Update mode
   document.getElementById('updateFieldsCard').classList.toggle('card-locked', mode !== 'update');
   // Reset field checkboxes to defaults when switching modes
-  updateFields = { upc: true, weight: true, qty: true };
+  updateFields  = { upc: true, weight: true, qty: true };
+  exportColumns = { sku: true, barcode: true, weight: true, weightUnit: true, price: true, comparePrice: true, taxable: true, inventoryQty: true };
   ['fieldUpc','fieldWeight','fieldQty'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.checked = true;
@@ -790,7 +792,9 @@ function doComparison() {
     const qtyChange = !updateFields.qty    ? 'skipped'
                     : (Number(oldQty)||0) === (Number(newQty)||0) ? 'same' : 'changed';
 
-    const hasChanges = upcChange === 'changed' || wtChange === 'changed' || qtyChange === 'changed';
+    // upcDotZero counts as a change when UPC is selected — barcode needs fixing in Shopify output
+    const hasChanges = upcChange === 'changed' || wtChange === 'changed' || qtyChange === 'changed'
+                    || (upcDotZero && updateFields.upc);
 
     results.push({
       sku, shpTitle,
@@ -1031,12 +1035,29 @@ function renderExport() {
   } else if (appMode === 'update') {
     el.innerHTML = `
       <div class="card-label">Export</div>
+      <div style="margin-bottom:14px;">
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
+          <div style="font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.6px; color:#999;">Columns to include in Shopify CSV</div>
+          <button onclick="setAllExportColumns(true)"  style="font-size:11px; color:#555; background:none; border:1px solid #ddd; border-radius:4px; padding:2px 8px; cursor:pointer;">Check all</button>
+          <button onclick="setAllExportColumns(false)" style="font-size:11px; color:#555; background:none; border:1px solid #ddd; border-radius:4px; padding:2px 8px; cursor:pointer;">Uncheck all</button>
+        </div>
+        <div class="field-options" style="flex-wrap:wrap; gap:12px 28px;">
+          <label class="field-option"><input type="checkbox" ${exportColumns.sku          ? 'checked' : ''} onchange="exportColumns.sku          = this.checked"> Variant SKU</label>
+          <label class="field-option"><input type="checkbox" ${exportColumns.barcode      ? 'checked' : ''} onchange="exportColumns.barcode      = this.checked"> Variant Barcode</label>
+          <label class="field-option"><input type="checkbox" ${exportColumns.weight       ? 'checked' : ''} onchange="exportColumns.weight       = this.checked"> Variant Weight</label>
+          <label class="field-option"><input type="checkbox" ${exportColumns.weightUnit   ? 'checked' : ''} onchange="exportColumns.weightUnit   = this.checked"> Variant Weight Unit</label>
+          <label class="field-option"><input type="checkbox" ${exportColumns.price        ? 'checked' : ''} onchange="exportColumns.price        = this.checked"> Variant Price</label>
+          <label class="field-option"><input type="checkbox" ${exportColumns.comparePrice ? 'checked' : ''} onchange="exportColumns.comparePrice = this.checked"> Variant Compare At Price</label>
+          <label class="field-option"><input type="checkbox" ${exportColumns.taxable      ? 'checked' : ''} onchange="exportColumns.taxable      = this.checked"> Variant Taxable</label>
+          <label class="field-option"><input type="checkbox" ${exportColumns.inventoryQty ? 'checked' : ''} onchange="exportColumns.inventoryQty = this.checked"> Variant Inventory Qty</label>
+        </div>
+      </div>
       <div class="export-row">
         <button class="exp-btn exp-primary" onclick="downloadUpdatedShopify()">⬇&nbsp; Download Updated Shopify CSV</button>
         <button class="exp-btn exp-secondary" onclick="downloadReport()">⬇&nbsp; Download Update Report</button>
       </div>
       <p style="font-size:11px; color:#bbb; margin-top:10px;">
-        <strong>Updated Shopify CSV</strong> — all rows with UPC, weight &amp; qty overwritten from latest inventory. Ready to import into Shopify.<br>
+        <strong>Updated Shopify CSV</strong> — only changed rows, with selected columns included. All other columns always present. Ready to import into Shopify.<br>
         <strong>Update Report</strong> — full breakdown showing old vs new values for every changed field, color-coded for easy review.
       </p>`;
   } else {
@@ -1052,6 +1073,11 @@ function renderExport() {
 }
 
 function setFilter(f) { activeFilter = f; renderResults(); }
+
+function setAllExportColumns(val) {
+  Object.keys(exportColumns).forEach(k => exportColumns[k] = val);
+  renderExport();
+}
 
 function getFiltered() {
   switch (activeFilter) {
@@ -1385,6 +1411,7 @@ function downloadUpdatedShopify() {
         if (updateFields.qty)    out['Variant Inventory Qty'] = r._invRow['TotalAvailable'] ?? out['Variant Inventory Qty'];
         const changes = [];
         if (r.upcChange === 'changed') changes.push(`UPC: ${r.oldUpc} → ${r.newUpc}`);
+        else if (r.upcDotZero && updateFields.upc) changes.push(`UPC barcode trailing ".0" removed`);
         if (r.wtChange  === 'changed') changes.push(`Weight: ${r.oldWt} → ${r.newWt}g`);
         if (r.qtyChange === 'changed') changes.push(`Qty: ${r.oldQty} → ${r.newQty}`);
         out['_Sync Notes'] = changes.join(' | ');
@@ -1397,7 +1424,26 @@ function downloadUpdatedShopify() {
       return acc;
     }, []);
 
-    downloadCSV(updated, `Products_Shopify_Updated_${today()}.csv`);
+    // Filter columns based on exportColumns selections
+    const colMap = {
+      'Variant SKU':              exportColumns.sku,
+      'Variant Barcode':          exportColumns.barcode,
+      'Variant Weight':           exportColumns.weight,
+      'Variant Weight Unit':      exportColumns.weightUnit,
+      'Variant Price':            exportColumns.price,
+      'Variant Compare At Price': exportColumns.comparePrice,
+      'Variant Taxable':          exportColumns.taxable,
+      'Variant Inventory Qty':    exportColumns.inventoryQty,
+    };
+    const filtered = updated.map(row => {
+      const out = {};
+      Object.keys(row).forEach(k => {
+        if (!(k in colMap) || colMap[k]) out[k] = row[k];
+      });
+      return out;
+    });
+
+    downloadCSV(filtered, `Products_Shopify_Updated_${today()}.csv`);
     return;
   }
 
