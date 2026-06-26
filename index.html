@@ -1476,8 +1476,8 @@ function downloadUpdatedShopify() {
       // Skip blank-SKU rows — they have no SKU to update in Shopify
       if (!key) return acc;
       const r   = updMap.get(key);
-      // Skip rows with no changes — only include changed or missing rows
-      if (r && !r.hasChanges) return acc;
+      // Skip rows not in inventory (no match) or with no changes
+      if (!r || !r.hasChanges) return acc;
       const out = { ...shpRow };
       if (r && r._invRow) {
         if (updateFields.upc)    out['Variant Barcode']       = r._invRow['UPC']            || out['Variant Barcode'];
