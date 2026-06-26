@@ -331,11 +331,8 @@ let nameMappings = [
   { shopify: 'Perfect Pima Pajama Shirt',         inventory: 'Perfect Pima Short Sleeve Button Up (Piping)'},
   { shopify: 'Perfect Pima Long Sleeve Pajama Shirt', inventory: 'Perfect Pima Long Sleeve Button Up (Piping)' },
   { shopify: 'Cloud Cotton Retro Boxer Brief',        inventory: 'Cloud Cotton Logo Boxer Brief'               },
-  { shopify: 'Bliss Cami', inventory: 'Bliss Bra Cami'               },
-  { shopify: 'Bliss Plunge Bodysuit', inventory: 'Bilss Plunge Bodysuit'               },
-  { shopify: 'Bliss Tank', inventory: 'Bliss Squareneck Tank'               },
-  { shopify: 'Bliss Under Short', inventory: 'Bliss Smoothing Short'               },
-  { shopify: 'Bliss T-Shirt', inventory: 'Bliss Tee'               },
+  { shopify: 'Base Picot Trim T-Shirt Bra',          inventory: 'Base Picot T-Shirt Bra'                      },
+  { shopify: 'Cloud Cotton T-Shirt Bra',             inventory: 'Cloud Cotton Base T-Shirt Bra'               },
 ];
 
 // =====================================================================
@@ -636,7 +633,8 @@ function matchToInventory(shpRow, styleLookup, shpToInv) {
   const invStyleName = shpToInv.get(titleBase) || titleBase;
 
   // Try all color × size combinations
-  const sizes = [...new Set([sizeCombined, sizeOpt2, invSize(sizeCombined), invSize(sizeOpt2)])].filter(Boolean);
+  // canonicalBraSize handles "34DD/E" → "34E" and "34DDD/F" → "34F" to match inventory format
+  const sizes = [...new Set([sizeCombined, sizeOpt2, invSize(sizeCombined), invSize(sizeOpt2), canonicalBraSize(sizeCombined)])].filter(Boolean);
 
   for (const color of colorCandidates) {
     for (const sz of sizes) {
