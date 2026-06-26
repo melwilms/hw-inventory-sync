@@ -119,6 +119,7 @@ tbody tr.r-populated { background: #f0fdf4; }
 tbody tr.r-nomatch   { background: #fff8e1; }
 tbody tr.r-bad       { background: #fff8f8; }
 tbody tr.r-missing   { background: #fff4eb; }
+tbody tr.r-nosku     { background: #faf5ff; }
 
 /* Badges */
 .b { display: inline-block; padding: 2px 7px; border-radius: 10px; font-size: 10px; font-weight: 700; white-space: nowrap; line-height: 1.6; }
@@ -127,6 +128,7 @@ tbody tr.r-missing   { background: #fff4eb; }
 .b-mismatch   { background: #ffebee; color: #c62828; }
 .b-missing-s  { background: #fff3e0; color: #e65100; }
 .b-missing-i  { background: #fce4ec; color: #880e4f; }
+.b-nosku      { background: #f3e8ff; color: #7e22ce; }
 .b-nomatch    { background: #fff9c4; color: #b45309; }
 .b-invalid    { background: #f5f5f5; color: #bdbdbd; }
 .b-changed    { background: #e0f2fe; color: #0369a1; }
@@ -772,6 +774,17 @@ function doComparison() {
     row.hasIssue = !row.isMissing && checks.some(c => /Mismatch/.test(c));
     results.push(row);
   });
+  // Flag blank-SKU rows in Shopify — these need Compile first
+  if (appMode === 'audit') {
+    shpBlank.forEach(shpRow => {
+      results.push({
+        sku: '', shpTitle: shpRow['Title'] || '', invStyle: '', invColor: '',
+        mode: 'compare', noSku: true, isMissing: false, hasIssue: false,
+        pn: '', upc: '', color: '', size: '', weight: '', qty: '',
+        _shpRow: shpRow,
+      });
+    });
+  }
   } // end audit block
 
   // ── UPDATE: Existing SKU rows → overwrite UPC, weight, qty ───────────
@@ -828,6 +841,18 @@ function doComparison() {
       _invRow: inv,
     });
   });
+
+  // Flag blank-SKU rows in Shopify — these need Compile first
+  if (appMode === 'update') {
+    shpBlank.forEach(shpRow => {
+      results.push({
+        sku: '', shpTitle: shpRow['Title'] || '', invStyle: '', invColor: '',
+        mode: 'update', noSku: true, isMissing: false, hasChanges: false,
+        upcChange: 'skipped', wtChange: 'skipped', qtyChange: 'skipped',
+        _shpRow: shpRow,
+      });
+    });
+  }
 
   // Flag inventory items not present in Shopify
   const shpSkuSet = new Set(shpWithSku.map(r => cleanSku(r['Variant SKU'] || '')));
@@ -943,9 +968,11 @@ function doComparison() {
     const sortKey = r => {
       if (r.mode === 'no_match')                                          return 0;
       if (r.mode === 'compare' && r.hasIssue)                            return 1;
+      if (r.mode === 'compare' && r.noSku)                              return 4;
       if (r.mode === 'update' && r.isMissing && r.missingIn==='inventory') return 0;
       if (r.mode === 'update' && r.hasChanges)                           return 1;
       if (r.mode === 'update' && r.isMissing && r.missingIn==='shopify') return 3;
+      if (r.mode === 'update' && r.noSku)                                return 4;
       if (r.mode === 'update')                                            return 2;
       if (r.mode === 'populated')                                        return 2;
       return 3;
@@ -969,15 +996,17 @@ function renderResults() {
   const updated    = results.filter(r => r.mode === 'populated' && !r.hasIssue).length;
   const warnings   = results.filter(r => r.mode === 'populated' && r.hasIssue).length;
   const noMatch    = results.filter(r => r.mode === 'no_match').length;
-  const clean       = results.filter(r => r.mode === 'compare' && !r.hasIssue && !r.isMissing).length;
-  const issues      = results.filter(r => r.mode === 'compare' && r.hasIssue).length;
-  const pnMis       = results.filter(r => r.mode === 'compare' && r.pn === 'Mismatch').length;
-  const misShp      = results.filter(r => r.mode === 'missing_shpfy' || (r.mode === 'compare' && r.pn === 'Missing in Shopify')).length;
-  const misInvAudit = results.filter(r => r.mode === 'compare' && r.pn === 'Missing in Inventory').length;
-  const updChanged  = results.filter(r => r.mode === 'update' && !r.isMissing && r.hasChanges).length;
-  const updSame     = results.filter(r => r.mode === 'update' && !r.isMissing && !r.hasChanges).length;
+  const clean       = results.filter(r => r.mode === 'compare' && !r.hasIssue && !r.isMissing && !r.noSku).length;
+  const issues      = results.filter(r => r.mode === 'compare' && r.hasIssue && !r.noSku).length;
+  const pnMis       = results.filter(r => r.mode === 'compare' && r.pn === 'Mismatch' && !r.noSku).length;
+  const misShp      = results.filter(r => r.mode === 'missing_shpfy' || (r.mode === 'compare' && r.pn === 'Missing in Shopify' && !r.noSku)).length;
+  const misInvAudit = results.filter(r => r.mode === 'compare' && r.pn === 'Missing in Inventory' && !r.noSku).length;
+  const auditNoSku  = results.filter(r => r.mode === 'compare' && r.noSku).length;
+  const updChanged  = results.filter(r => r.mode === 'update' && !r.isMissing && !r.noSku && r.hasChanges).length;
+  const updSame     = results.filter(r => r.mode === 'update' && !r.isMissing && !r.noSku && !r.hasChanges).length;
   const updMissInv  = results.filter(r => r.mode === 'update' && r.isMissing && r.missingIn === 'inventory').length;
   const updMissShp  = results.filter(r => r.mode === 'update' && r.isMissing && r.missingIn === 'shopify').length;
+  const updNoSku    = results.filter(r => r.mode === 'update' && r.noSku).length;
 
   const compileTiles = [
     { cls:'',         key:'all',       num:total,    lbl:'Total'            },
@@ -987,12 +1016,13 @@ function renderResults() {
     { cls:'c-pink',   key:'missing',   num:misShp,   lbl:'Missing in Shpfy' },
   ];
   const auditTiles = [
-    { cls:'',         key:'all',         num:total,        lbl:'Total'            },
-    { cls:'c-green',  key:'clean',       num:clean,        lbl:'Clean'            },
-    { cls:'c-red',    key:'issues',      num:issues,       lbl:'Issues'           },
-    { cls:'c-yellow', key:'missing_inv', num:misInvAudit,  lbl:'Missing in Inv'   },
-    { cls:'c-orange', key:'missing',     num:misShp,       lbl:'Missing in Shpfy' },
-    { cls:'c-purple', key:'pn',          num:pnMis,        lbl:'Product Name'     },
+    { cls:'',         key:'all',           num:total,        lbl:'Total'            },
+    { cls:'c-green',  key:'clean',         num:clean,        lbl:'Clean'            },
+    { cls:'c-red',    key:'issues',        num:issues,       lbl:'Issues'           },
+    { cls:'c-yellow', key:'missing_inv',   num:misInvAudit,  lbl:'Missing in Inv'   },
+    { cls:'c-orange', key:'missing',       num:misShp,       lbl:'Missing in Shpfy' },
+    { cls:'c-purple', key:'pn',            num:pnMis,        lbl:'Product Name'     },
+    { cls:'c-purple', key:'audit_no_sku',  num:auditNoSku,   lbl:'No SKU'           },
   ];
   const updateTiles = [
     { cls:'',         key:'all',          num:total,       lbl:'Total'            },
@@ -1000,6 +1030,7 @@ function renderResults() {
     { cls:'c-green',  key:'upd_same',     num:updSame,     lbl:'No Change'        },
     { cls:'c-yellow', key:'upd_miss_inv', num:updMissInv,  lbl:'Missing in Inv'   },
     { cls:'c-pink',   key:'upd_miss_shp', num:updMissShp,  lbl:'Missing in Shpfy' },
+    { cls:'c-purple', key:'upd_no_sku',   num:updNoSku,    lbl:'No SKU'           },
   ];
   const tiles = appMode === 'compile' ? compileTiles : appMode === 'update' ? updateTiles : auditTiles;
 
@@ -1017,11 +1048,12 @@ function renderResults() {
     { key:'missing',  label:`Missing in Shpfy (${misShp})`    },
   ];
   const auditChips = [
-    { key:'all',         label:`All (${total})`                       },
-    { key:'clean',       label:`Clean (${clean})`                     },
-    { key:'issues',      label:`⚠ Issues (${issues})`                 },
-    { key:'missing_inv', label:`Missing in Inv (${misInvAudit})`      },
-    { key:'missing',     label:`Missing in Shpfy (${misShp})`         },
+    { key:'all',           label:`All (${total})`                       },
+    { key:'clean',         label:`Clean (${clean})`                     },
+    { key:'issues',        label:`⚠ Issues (${issues})`                 },
+    { key:'missing_inv',   label:`Missing in Inv (${misInvAudit})`      },
+    { key:'missing',       label:`Missing in Shpfy (${misShp})`         },
+    { key:'audit_no_sku',  label:`No SKU in Shopify (${auditNoSku})`    },
   ];
   const updateChips = [
     { key:'all',          label:`All (${total})`                    },
@@ -1029,6 +1061,7 @@ function renderResults() {
     { key:'upd_same',     label:`✓ No Change (${updSame})`          },
     { key:'upd_miss_inv', label:`Missing in Inv (${updMissInv})`    },
     { key:'upd_miss_shp', label:`Missing in Shpfy (${updMissShp})`  },
+    { key:'upd_no_sku',   label:`No SKU in Shopify (${updNoSku})`   },
   ];
   const chips = appMode === 'compile' ? compileChips : appMode === 'update' ? updateChips : auditChips;
   document.getElementById('filterRow').innerHTML = chips.map(c =>
@@ -1115,6 +1148,8 @@ function getFiltered() {
     case 'upd_same':    return results.filter(r => r.mode === 'update' && !r.isMissing && !r.hasChanges);
     case 'upd_miss_inv':return results.filter(r => r.mode === 'update' && r.isMissing && r.missingIn === 'inventory');
     case 'upd_miss_shp':return results.filter(r => r.mode === 'update' && r.isMissing && r.missingIn === 'shopify');
+    case 'upd_no_sku':   return results.filter(r => r.mode === 'update' && r.noSku);
+    case 'audit_no_sku': return results.filter(r => r.mode === 'compare' && r.noSku);
     default:            return results;
   }
 }
@@ -1137,8 +1172,10 @@ function renderTable() {
                  : r.pn==='Missing in Shopify'                                      ? 'r-missing'
                  : r.mode==='update' && r.isMissing && r.missingIn==='inventory'    ? 'r-nomatch'
                  : r.mode==='update' && r.isMissing && r.missingIn==='shopify'      ? 'r-missing'
+                 : r.mode==='update' && r.noSku                                     ? 'r-nosku'
                  : r.mode==='update' && r.hasChanges                                ? 'r-populated'
                  : r.mode==='update'                                                ? 'r-ok'
+                 : r.mode==='compare' && r.noSku                                    ? 'r-nosku'
                  : r.hasIssue                                                       ? 'r-bad'
                  : 'r-ok';
 
@@ -1181,15 +1218,29 @@ function renderTable() {
         <td>${esc(r.sku) || '<em style="color:#ccc">—</em>'}</td>
         <td>${r.shpTitle ? esc(r.shpTitle) : '<em style="color:#ccc">Not in Shopify</em>'}</td>
         <td>${r.invStyle ? esc(r.invStyle) + (r.invColor ? `<span style="color:#aaa"> / ${esc(r.invColor)}</span>` : '') : '<em style="color:#ccc">—</em>'}</td>
-        <td>${missingInv ? `<span class="b b-nomatch">Missing in Inv</span>` : missingShp ? `<span class="b b-missing-s">Missing in Shpfy</span>` : r.hasChanges ? `<span class="b b-changed">↻ Updated</span>` : `<span class="b b-nochange">No Change</span>`}</td>
+        <td>${r.noSku ? `<span class="b b-nosku">No SKU in Shopify</span>` : missingInv ? `<span class="b b-nomatch">Missing in Inv</span>` : missingShp ? `<span class="b b-missing-s">Missing in Shpfy</span>` : r.hasChanges ? `<span class="b b-changed">↻ Updated</span>` : `<span class="b b-nochange">No Change</span>`}</td>
         <td>${showUpdate(r.upcChange, r.oldUpc, r.newUpc)}${r.upcDotZero ? `<div class="detail" style="color:#b45309">⚠ Barcode had trailing ".0" — fixed in output</div>` : ''}</td>
         <td><em style="color:#ccc">—</em></td>
-        <td><em style="color:#ccc">—</em></td>
+        <td>${r._shpRow ? esc((String(r._shpRow['Option2 Value']||'') + String(r._shpRow['Option3 Value']||'')).trim()) || '<em style="color:#ccc">—</em>' : '<em style="color:#ccc">—</em>'}</td>
         <td>${showUpdate(r.wtChange,  r.oldWt,  r.newWt)}</td>
         <td>${showUpdate(r.qtyChange, r.oldQty, r.newQty)}</td>
       </tr>`;
     }
 
+    if (r.noSku) {
+      const shpSize = r._shpRow ? (String(r._shpRow['Option2 Value']||'') + String(r._shpRow['Option3 Value']||'')).trim() : '';
+      return `<tr class="${rowCls}">
+        <td><em style="color:#ccc">—</em></td>
+        <td>${esc(r.shpTitle)}</td>
+        <td><em style="color:#ccc">—</em></td>
+        <td><span class="b b-nosku">No SKU in Shopify</span></td>
+        <td><em style="color:#ccc">—</em></td>
+        <td><em style="color:#ccc">—</em></td>
+        <td>${shpSize ? esc(shpSize) : '<em style="color:#ccc">—</em>'}</td>
+        <td><em style="color:#ccc">—</em></td>
+        <td><em style="color:#ccc">—</em></td>
+      </tr>`;
+    }
     return `<tr class="${rowCls}">
       <td>${skuCell}</td>
       <td>${esc(r.shpTitle)}${r.titleFormatIssue ? `<div class="detail" style="color:#b45309">⚠ Title format issue in Shopify — missing space after dash (e.g. "Shirt -Blue" → "Shirt - Blue")</div>` : ''}</td>
@@ -1418,10 +1469,12 @@ function downloadUpdatedShopify() {
   // ── UPDATE mode: overwrite UPC, weight, qty by SKU match ──────────────
   if (appMode === 'update') {
     const updMap = new Map();
-    results.forEach(r => { if (r.mode === 'update' && !r.isMissing) updMap.set(cleanSku(r.sku), r); });
+    results.forEach(r => { if (r.mode === 'update' && !r.isMissing && !r.noSku) updMap.set(cleanSku(r.sku), r); });
 
     const updated = shopifyData.reduce((acc, shpRow) => {
       const key = cleanSku(shpRow['Variant SKU'] || '');
+      // Skip blank-SKU rows — they have no SKU to update in Shopify
+      if (!key) return acc;
       const r   = updMap.get(key);
       // Skip rows with no changes — only include changed or missing rows
       if (r && !r.hasChanges) return acc;
