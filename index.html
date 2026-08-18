@@ -91,6 +91,7 @@ input[type=file] { display: none; }
 .stat-tile.active { border-color: #1a1a1a; box-shadow: 0 0 0 2px #1a1a1a; }
 .stat-num { font-size: 24px; font-weight: 700; line-height: 1; }
 .stat-lbl { font-size: 10px; color: #999; text-transform: uppercase; letter-spacing: 0.6px; margin-top: 4px; }
+.stat-sub { font-size: 10px; color: #bbb; margin-top: 2px; }
 .c-green  .stat-num { color: #43a047; }
 .c-teal   .stat-num { color: #00897b; }
 .c-red    .stat-num { color: #e53935; }
@@ -342,6 +343,8 @@ let nameMappings = [
   { shopify: 'Bliss Plunge Adjustable Bralette',     inventory: 'Bliss Adjustable'                            },
   { shopify: 'Cloud Cotton Pajama Shorts',           inventory: 'Cloud Cotton Short'                          },
   { shopify: 'Cloud Cotton Pajama Shirt',            inventory: 'Cloud Cotton T-Shirt'                        },
+  { shopify: 'BlissSmooth™ Bralette',               inventory: 'Bliss Smoothing Bralette'                    },
+  { shopify: 'Base Balconette Bra',                  inventory: 'Base Balconette'                             },
 ];
 
 // =====================================================================
@@ -991,6 +994,11 @@ function doComparison() {
 // =====================================================================
 // RENDER
 // =====================================================================
+// Count unique products (by Shopify title, falling back to invStyle|invColor for missing-in-shopify rows)
+function countProducts(rows) {
+  return new Set(rows.map(r => r.shpTitle || `${r.invStyle}|${r.invColor}`).filter(Boolean)).size;
+}
+
 function renderResults() {
   const total      = results.length;
   const updated    = results.filter(r => r.mode === 'populated' && !r.hasIssue).length;
@@ -1007,6 +1015,26 @@ function renderResults() {
   const updMissInv  = results.filter(r => r.mode === 'update' && r.isMissing && r.missingIn === 'inventory').length;
   const updMissShp  = results.filter(r => r.mode === 'update' && r.isMissing && r.missingIn === 'shopify').length;
   const updNoSku    = results.filter(r => r.mode === 'update' && r.noSku).length;
+
+  // Pre-bucket row sets for product counting
+  const buckets = {
+    all:          results,
+    updated:      results.filter(r => r.mode === 'populated' && !r.hasIssue),
+    warnings:     results.filter(r => r.mode === 'populated' && r.hasIssue),
+    no_match:     results.filter(r => r.mode === 'no_match'),
+    missing:      results.filter(r => r.mode === 'missing_shpfy' || (r.mode === 'compare' && r.pn === 'Missing in Shopify' && !r.noSku)),
+    clean:        results.filter(r => r.mode === 'compare' && !r.hasIssue && !r.isMissing && !r.noSku),
+    issues:       results.filter(r => r.mode === 'compare' && r.hasIssue && !r.noSku),
+    missing_inv:  results.filter(r => r.mode === 'compare' && r.pn === 'Missing in Inventory' && !r.noSku),
+    pn:           results.filter(r => r.mode === 'compare' && r.pn === 'Mismatch' && !r.noSku),
+    audit_no_sku: results.filter(r => r.mode === 'compare' && r.noSku),
+    upd_changed:  results.filter(r => r.mode === 'update' && !r.isMissing && !r.noSku && r.hasChanges),
+    upd_same:     results.filter(r => r.mode === 'update' && !r.isMissing && !r.noSku && !r.hasChanges),
+    upd_miss_inv: results.filter(r => r.mode === 'update' && r.isMissing && r.missingIn === 'inventory'),
+    upd_miss_shp: results.filter(r => r.mode === 'update' && r.isMissing && r.missingIn === 'shopify'),
+    upd_no_sku:   results.filter(r => r.mode === 'update' && r.noSku),
+  };
+  const p = key => countProducts(buckets[key] || []);
 
   const compileTiles = [
     { cls:'',         key:'all',       num:total,    lbl:'Total'            },
@@ -1034,11 +1062,16 @@ function renderResults() {
   ];
   const tiles = appMode === 'compile' ? compileTiles : appMode === 'update' ? updateTiles : auditTiles;
 
-  document.getElementById('statsRow').innerHTML = tiles.map(s => `
+  document.getElementById('statsRow').innerHTML = tiles.map(s => {
+    const prods = p(s.key);
+    const prodLabel = prods > 0 ? `<div class="stat-sub">${prods} product${prods !== 1 ? 's' : ''}</div>` : '';
+    return `
     <div class="stat-tile ${s.cls} ${activeFilter===s.key?'active':''}" onclick="setFilter('${s.key}')">
       <div class="stat-num">${s.num.toLocaleString()}</div>
       <div class="stat-lbl">${s.lbl}</div>
-    </div>`).join('');
+      ${prodLabel}
+    </div>`;
+  }).join('');
 
   const compileChips = [
     { key:'all',      label:`All (${total})`                  },
