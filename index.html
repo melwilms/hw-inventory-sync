@@ -269,6 +269,27 @@ tbody tr.r-nosku     { background: #faf5ff; }
     </div><!-- end card-body -->
   </div>
 
+  <!-- Color Mappings -->
+  <div class="card card-locked" id="colorMappingsCard">
+    <div class="card-label">
+      <span class="mapping-toggle" onclick="toggleColorMappings()">
+        <span class="mapping-toggle-icon closed" id="colorMappingArrow">▼</span>
+        &nbsp;5 — Color Mappings
+        <span style="font-size:10px; color:#bbb; font-weight:400; text-transform:none; letter-spacing:0; margin-left:6px;">when a color name differs between Shopify and your inventory system</span>
+      </span>
+    </div>
+    <div class="card-body">
+    <div id="colorMappingBody" style="display:none">
+      <p class="mapping-hint">Maps Shopify color values to inventory color values. Used to match products and suppress false color mismatches in Audit mode.</p>
+      <table class="mapping-table">
+        <thead><tr><th>Shopify Color</th><th>Inventory Color</th><th>Product (optional — leave blank to apply to all)</th><th></th></tr></thead>
+        <tbody id="colorMappingRows"></tbody>
+      </table>
+      <button class="btn-add-row" onclick="addColorMapping()">+ Add mapping</button>
+    </div>
+    </div>
+  </div>
+
   <!-- Run -->
   <div class="run-wrap">
     <button class="run-btn" id="runBtn" onclick="runComparison()" disabled>
@@ -322,7 +343,14 @@ let invFileNames  = [];
 let invDatasets   = [];
 let results       = [];
 let activeFilter  = 'all';
-let mappingsOpen  = false;
+let mappingsOpen      = false;
+let colorMappingsOpen = false;
+let colorMappings = [
+  { shopify: 'Black', inventory: 'Black w/Black', style: 'Bliss Lace Triangle Bralette' },
+  { shopify: 'Black', inventory: 'Black w/Black', style: 'Bliss Lace Brief'             },
+  { shopify: 'Beige', inventory: 'Beige w/Ivory', style: 'Bliss Lace Triangle Bralette' },
+  { shopify: 'Beige', inventory: 'Beige w/Ivory', style: 'Bliss Lace Brief'             },
+];
 
 let nameMappings = [
   { shopify: 'Bliss Low Rise Thong',              inventory: 'Bliss Banded Thong'                          },
@@ -343,8 +371,16 @@ let nameMappings = [
   { shopify: 'Bliss Plunge Adjustable Bralette',     inventory: 'Bliss Adjustable'                            },
   { shopify: 'Cloud Cotton Pajama Shorts',           inventory: 'Cloud Cotton Short'                          },
   { shopify: 'Cloud Cotton Pajama Shirt',            inventory: 'Cloud Cotton T-Shirt'                        },
-  { shopify: 'BlissSmooth™ Bralette',               inventory: 'Bliss Smoothing Bralette'                    },
+  { shopify: 'BlissSmooth™ Bralette',                inventory: 'Bliss Smoothing Bralette'                    },
   { shopify: 'Base Balconette Bra',                  inventory: 'Base Balconette'                             },
+  { shopify: 'Bliss Long Sleeve T-Shirt',            inventory: 'Bliss Long SleeveTee'                        },
+  { shopify: 'Stretch Satin Square Neck Bralette',   inventory: 'Stretch Satin Squareneck Bralette'           },
+  { shopify: 'Invisible No Show Highwaist Brief',    inventory: 'No Show HW Brief'                            },
+  { shopify: 'Bliss Lace Triangle Bralette',         inventory: 'Bliss Galloon Lace Bralette'                 },
+  { shopify: 'Bliss Lace Brief',                     inventory: 'Bliss Galloon Lace Brief'                    },
+  { shopify: 'Invisible No Show Low Rise Thong',     inventory: 'No Show Low Rise Thong'                      },
+  { shopify: 'Invisible No Show Hiphugger',          inventory: 'No Show Hiphugger'                           },
+  { shopify: 'Invisible No Show Highwaist Thong',    inventory: 'No Show HW Thong'                            },
 ];
 
 // =====================================================================
@@ -352,6 +388,7 @@ let nameMappings = [
 // =====================================================================
 document.addEventListener('DOMContentLoaded', () => {
   renderMappings();
+  renderColorMappings();
   setupDrop('shopifyZone',   handleShopifyDrop);
   setupDrop('inventoryZone', handleInventoryDrop);
   document.getElementById('shopifyInput').addEventListener('change',   e => handleShopifyDrop(e.target.files));
@@ -462,6 +499,22 @@ function toggleMappings()  {
   document.getElementById('mappingBody').style.display = mappingsOpen ? '' : 'none';
   document.getElementById('mappingArrow').classList.toggle('closed', !mappingsOpen);
 }
+function renderColorMappings() {
+  document.getElementById('colorMappingRows').innerHTML = colorMappings.map((m, i) => `
+    <tr>
+      <td><input value="${esc(m.shopify)}"   oninput="colorMappings[${i}].shopify    = this.value" placeholder="e.g. Black"></td>
+      <td><input value="${esc(m.inventory)}" oninput="colorMappings[${i}].inventory  = this.value" placeholder="e.g. Black w/Black"></td>
+      <td><input value="${esc(m.style||'')}" oninput="colorMappings[${i}].style      = this.value" placeholder="e.g. Bliss Highwaist Brief (Shopify name)"></td>
+      <td><button class="btn-remove" onclick="removeColorMapping(${i})" title="Remove">✕</button></td>
+    </tr>`).join('');
+}
+function addColorMapping()      { colorMappings.push({ shopify: '', inventory: '', style: '' }); renderColorMappings(); }
+function removeColorMapping(i)  { colorMappings.splice(i, 1); renderColorMappings(); }
+function toggleColorMappings()  {
+  colorMappingsOpen = !colorMappingsOpen;
+  document.getElementById('colorMappingBody').style.display = colorMappingsOpen ? '' : 'none';
+  document.getElementById('colorMappingArrow').classList.toggle('closed', !colorMappingsOpen);
+}
 
 function setMode(mode) {
   if (appMode === mode) return;
@@ -475,6 +528,7 @@ function setMode(mode) {
   // Unlock steps 2, 3, 4
   document.getElementById('uploadCard').classList.remove('card-locked');
   document.getElementById('mappingsCard').classList.remove('card-locked');
+  document.getElementById('colorMappingsCard').classList.remove('card-locked');
   // Update Fields card only unlocks in Update mode
   document.getElementById('updateFieldsCard').classList.toggle('card-locked', mode !== 'update');
   // Reset field checkboxes to defaults when switching modes
@@ -529,6 +583,7 @@ function resetUploads() {
     document.getElementById('uploadCard').classList.add('card-locked');
     document.getElementById('updateFieldsCard').classList.add('card-locked');
     document.getElementById('mappingsCard').classList.add('card-locked');
+    document.getElementById('colorMappingsCard').classList.add('card-locked');
   }
   // Hide results
   document.getElementById('resultsSection').classList.add('hidden');
@@ -598,7 +653,30 @@ function buildMappings() {
       invToShp.set(m.inventory.trim().toLowerCase(), m.shopify.trim().toLowerCase());
     }
   });
-  return { shpToInv, invToShp };
+  // Color mappings: keyed by "style|shopifyColor" (scoped) or "shopifyColor" (global, style blank)
+  // Lookup: resolveColor(shopifyColor, styleName) → inventoryColor
+  const colorMapEntries = colorMappings.filter(m => m.shopify && m.inventory).map(m => ({
+    shpColor: m.shopify.trim().toLowerCase(),
+    invColor: m.inventory.trim().toLowerCase(),
+    style:    m.style ? m.style.trim().toLowerCase() : '',
+  }));
+  function resolveColor(shpColor, styleName) {
+    const sc = (shpColor || '').toLowerCase(), sn = (styleName || '').toLowerCase();
+    // Scoped match (style-specific) takes priority
+    const scoped = colorMapEntries.find(e => e.shpColor === sc && e.style && sn.includes(e.style));
+    if (scoped) return scoped.invColor;
+    // Global match (no style specified)
+    const global = colorMapEntries.find(e => e.shpColor === sc && !e.style);
+    return global ? global.invColor : null;
+  }
+  function resolveColorReverse(invColor, styleName) {
+    const ic = (invColor || '').toLowerCase(), sn = (styleName || '').toLowerCase();
+    const scoped = colorMapEntries.find(e => e.invColor === ic && e.style && sn.includes(e.style));
+    if (scoped) return scoped.shpColor;
+    const global = colorMapEntries.find(e => e.invColor === ic && !e.style);
+    return global ? global.shpColor : null;
+  }
+  return { shpToInv, invToShp, resolveColor, resolveColorReverse };
 }
 
 // Build inventory lookup by (style|color|size) — stores both inv-format and shopify-format sizes
@@ -619,7 +697,7 @@ function buildStyleLookup() {
 }
 
 // Match a blank-SKU Shopify row to an inventory row
-function matchToInventory(shpRow, styleLookup, shpToInv) {
+function matchToInventory(shpRow, styleLookup, shpToInv, resolveColor) {
   const title    = String(shpRow['Title'] || '');
   const opt1     = String(shpRow['Option1 Value'] || ''); // color
   const opt2     = String(shpRow['Option2 Value'] || ''); // size or band
@@ -634,15 +712,19 @@ function matchToInventory(shpRow, styleLookup, shpToInv) {
   const titleColor = (title.split(/\s+-\s+/)[1] || '').trim().toLowerCase();
   const opt1Color  = opt1.toLowerCase().trim();
   // Deduplicate, filter blanks — try titleColor first so "- Mirage" products get Mirage inventory rows
-  const colorCandidates = [...new Set([titleColor, opt1Color].filter(Boolean))];
+  // Also add inventory-equivalent colors via color mappings (scoped to this product style)
+  const rawColors = [titleColor, opt1Color].filter(Boolean);
+  const invStyleName0 = shpToInv.get(titleBase) || titleBase; // resolve before color candidates
+  const mappedColors = resolveColor ? rawColors.map(c => resolveColor(c, invStyleName0)).filter(Boolean) : [];
+  const colorCandidates = [...new Set([...rawColors, ...mappedColors])];
 
   // Size: combine opt2 + opt3 (handles bra sizing: "34" + "D" → "34D"), also try separately
   // Strip internal spaces so "34 D" and "34D" both match inventory's "34D"
   const sizeCombined = (opt2 + opt3).replace(/\s+/g, '').toUpperCase();  // e.g. "34D" or "L"
   const sizeOpt2     = opt2.trim().toUpperCase();
 
-  // Resolve inventory style name via mapping
-  const invStyleName = shpToInv.get(titleBase) || titleBase;
+  // Resolve inventory style name via mapping (already done above as invStyleName0)
+  const invStyleName = invStyleName0;
 
   // Try all color × size combinations
   // canonicalBraSize handles "34DD/E" → "34E" and "34DDD/F" → "34F" to match inventory format
@@ -704,7 +786,7 @@ function runComparison() {
 }
 
 function doComparison() {
-  const { shpToInv, invToShp } = buildMappings();
+  const { shpToInv, invToShp, resolveColor, resolveColorReverse } = buildMappings();
   const styleLookup = buildStyleLookup();
 
   // SKU-based inventory lookup
@@ -754,7 +836,12 @@ function doComparison() {
     row.upc    = fieldCompare(row.invUpc,  row.shpUpc,  inInv, inShp);
 
     row.invColor = inv?.['Color'] || '';       row.shpColor = shp?.['Option1 Value'] || '';
-    row.color    = fieldCompare(row.invColor, row.shpColor, inInv, inShp);
+    // Check color mapping scoped to this product title
+    const resolvedInvColor = resolveColor(row.shpColor, shpTitle) || resolveColorReverse(row.invColor, shpTitle);
+    const colorMappingMatch = resolvedInvColor &&
+      (resolvedInvColor === row.invColor.toLowerCase().trim() || resolvedInvColor === row.shpColor.toLowerCase().trim());
+    row.color = colorMappingMatch ? 'Match' : fieldCompare(row.invColor, row.shpColor, inInv, inShp);
+    row.colorMapped = colorMappingMatch && row.invColor.toLowerCase().trim() !== row.shpColor.toLowerCase().trim();
 
     row.invSize = translateSize(inv?.['Size'] || '');
     row.shpSize = (String(shp?.['Option2 Value']||'') + String(shp?.['Option3 Value']||'')).trim();
@@ -881,7 +968,7 @@ function doComparison() {
   if (appMode === 'compile') {
   const matchedInvSkus = new Set();
   shpBlank.forEach(shpRow => {
-    const match = matchToInventory(shpRow, styleLookup, shpToInv);
+    const match = matchToInventory(shpRow, styleLookup, shpToInv, resolveColor);
     const shpTitle = shpRow['Title'] || '';
     const shpSize  = (String(shpRow['Option2 Value']||'') + String(shpRow['Option3 Value']||'')).trim();
 
@@ -1280,7 +1367,7 @@ function renderTable() {
       <td>${r.invStyle ? esc(r.invStyle) + (r.invColor ? `<span style="color:#aaa"> / ${esc(r.invColor)}</span>` : '') : '<em style="color:#ccc">—</em>'}</td>
       <td>${r.mode==='compare' ? (badge(r.pn) + (r.pn==='Mismatch'?`<div class="detail">Inv: ${esc(r.invStyle)}</div>`:'')) : (r.mode==='populated'?`<span class="b b-populated">✓</span>`:`<span class="b b-nomatch">No Match</span>`)}</td>
       <td>${showVal(r.upc, r.invUpc, r.shpUpc)}${r.upcDotZero ? `<div class="detail" style="color:#b45309">⚠ Barcode has trailing ".0" in Shopify — fix in Shopify admin</div>` : ''}</td>
-      <td>${showVal(r.color,  r.invColor, r.shpColor)}</td>
+      <td>${showVal(r.color, r.invColor, r.shpColor)}${r.colorMapped ? `<div class="detail" style="color:#aaa">Mapped: ${esc(r.shpColor)} → ${esc(r.invColor)}</div>` : ''}</td>
       <td>${showVal(r.size,   r.invSize,  r.shpSize)}</td>
       <td>${showVal(r.weight, r.invWt,    r.shpWt)}</td>
       <td>${showVal(r.qty,    r.invQty,   r.shpQty)}</td>
