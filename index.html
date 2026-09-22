@@ -994,7 +994,14 @@ function doComparison() {
                         || invStyleLow.includes(titleBase2)
                         || mappingAcknowledged;
 
+      // Check 3: title color vs Option1 mismatch — title says one color, Option1 says another
+      // This catches products cloned in Shopify where the title was updated but Option1 wasn't (or vice versa)
+      const titleColorSuffix = (shpTitle.split(/\s+-\s+/)[1] || '').trim();
+      const titleColorLow    = titleColorSuffix.toLowerCase();
+      const titleOpt1Mismatch = titleColorSuffix && shpOpt1 && titleColorLow !== shpOpt1;
+
       const warnings = [];
+      if (titleOpt1Mismatch) warnings.push(`Title color "${titleColorSuffix}" doesn't match Shopify Option1 "${shpRow['Option1 Value']}" — the color option wasn't updated in Shopify. The data populated here came from the "${invRow['Color']}" inventory row (matched via Option1). Update Option1 in Shopify admin before importing this file.`);
       if (!colorOptMatch) warnings.push(`Color option mismatch — Shopify Option1 is "${shpRow['Option1 Value']}" but inventory color is "${invRow['Color']}". Update the product color option in Shopify.`);
       if (!nameMatch)     warnings.push(`Product name differs — Shopify: "${shpTitle.split(/\s+-\s+/)[0]}" / Inventory: "${invRow['Style']}". Consider standardising names or adding a permanent mapping.`);
 
@@ -1004,6 +1011,7 @@ function doComparison() {
         invStyle: invRow['Style'],
         mode:     'populated',
         hasIssue: warnings.length > 0,
+        titleOpt1Mismatch,
         warnings,
         // Store populated values
         invUpc:   invRow['UPC']            || '',
@@ -1310,7 +1318,9 @@ function renderTable() {
     };
 
     const skuCell = r.mode === 'populated'
-      ? `<span class="sku-new">★ ${esc(r.sku)}</span><div class="detail">updated</div>`
+      ? r.hasIssue
+        ? `<span class="sku" style="color:#c62828">${esc(r.sku)}</span><div class="detail" style="color:#c62828">✗ fix warning</div>`
+        : `<span class="sku-new">${esc(r.sku)}</span><div class="detail" style="color:#065f46">✓ imported</div>`
       : r.mode === 'missing_shpfy'
       ? `<span class="sku" style="color:#e91e8c">${esc(r.sku)}</span><div class="detail">not in Shopify</div>`
       : r.sku ? `<span class="sku">${esc(r.sku)}</span>`
@@ -1369,7 +1379,9 @@ function renderTable() {
       <td>${r.invStyle ? esc(r.invStyle) + (r.invColor ? `<span style="color:#aaa"> / ${esc(r.invColor)}</span>` : '') : '<em style="color:#ccc">—</em>'}</td>
       <td>${r.mode==='compare' ? (badge(r.pn) + (r.pn==='Mismatch'?`<div class="detail">Inv: ${esc(r.invStyle)}</div>`:'')) : (r.mode==='populated'?`<span class="b b-populated">✓</span>`:`<span class="b b-nomatch">No Match</span>`)}</td>
       <td>${showVal(r.upc, r.invUpc, r.shpUpc)}${r.upcDotZero ? `<div class="detail" style="color:#b45309">⚠ Barcode has trailing ".0" in Shopify — fix in Shopify admin</div>` : ''}</td>
-      <td>${showVal(r.color, r.invColor, r.shpColor)}${r.colorMapped ? `<div class="detail" style="color:#aaa">Mapped: ${esc(r.shpColor)} → ${esc(r.invColor)}</div>` : ''}</td>
+      <td>${r.titleOpt1Mismatch
+          ? `<span class="b b-mismatch">✗ Mismatch</span><div class="detail">${esc(r.shpColor)} / ${esc(r.invColor)}</div>`
+          : showVal(r.color, r.invColor, r.shpColor)}${r.colorMapped ? `<div class="detail" style="color:#aaa">Mapped: ${esc(r.shpColor)} → ${esc(r.invColor)}</div>` : ''}</td>
       <td>${showVal(r.size,   r.invSize,  r.shpSize)}</td>
       <td>${showVal(r.weight, r.invWt,    r.shpWt)}</td>
       <td>${showVal(r.qty,    r.invQty,   r.shpQty)}</td>
@@ -1672,20 +1684,23 @@ function downloadUpdatedShopify() {
     if (r.mode === 'no_match')  noMatchSet.add(r._shpRow);
   });
 
-  const updated = shopifyData.map(shpRow => {
+  const updated = shopifyData.reduce((acc, shpRow) => {
     const out = { ...shpRow };
     const sku = (shpRow['Variant SKU'] || '').trim();
 
     if (!sku) {
       // Blank-SKU row — populate from inventory if matched
       const pop = populatedMap.get(shpRow);
-      if (pop) {
+      if (pop && pop.hasIssue) {
+        // Has warnings — exclude from CSV entirely so nothing broken gets imported
+        return acc;
+      } else if (pop) {
         out['Variant SKU']           = pop._invRow['CustomerSKU']   || '';
         out['Variant Barcode']       = pop._invRow['UPC']           || '';
         out['Variant Weight']        = pop._invRow['WeightInGrams'] || '';
         out['Variant Weight Unit']   = 'g';
         out['Variant Inventory Qty'] = pop._invRow['TotalAvailable'] || '0';
-        out['_Sync Notes'] = pop.warnings?.length ? pop.warnings.join(' | ') : '';
+        out['_Sync Notes'] = '';
       } else {
         out['_Sync Notes'] = 'Missing in inventory — needs manual SKU, UPC, weight & qty';
       }
@@ -1701,8 +1716,9 @@ function downloadUpdatedShopify() {
       }
       out['_Sync Notes'] = issueNotes.get(key) || '';
     }
-    return out;
-  });
+    acc.push(out);
+    return acc;
+  }, []);
 
   downloadCSV(updated, `Products_Shopify_Updated_${today()}.csv`);
 }
