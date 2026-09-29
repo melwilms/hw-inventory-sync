@@ -135,6 +135,14 @@ tbody tr.r-nosku     { background: #faf5ff; }
 .b-changed    { background: #e0f2fe; color: #0369a1; }
 .b-nochange   { background: #f5f5f5; color: #888; }
 
+.exp-btn-danger { background: #7f1d1d; color: #fff; border: 2px solid #991b1b; border-radius: 8px; padding: 10px 18px; font-size: 13px; font-weight: 700; cursor: pointer; letter-spacing: 0.3px; display: flex; align-items: center; gap: 8px; transition: background 0.15s; }
+.exp-btn-danger:hover { background: #991b1b; }
+.exp-btn-danger:disabled { background: #ccc; border-color: #ccc; color: #fff; cursor: not-allowed; }
+.deletion-panel { background: #fff5f5; border: 2px solid #fca5a5; border-radius: 10px; padding: 14px 16px; margin-top: 16px; }
+.deletion-panel-title { font-size: 12px; font-weight: 700; color: #991b1b; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 6px; }
+.deletion-panel-desc { font-size: 11px; color: #7f1d1d; margin-bottom: 12px; line-height: 1.5; }
+.del-checkbox { width: 15px; height: 15px; accent-color: #991b1b; cursor: pointer; flex-shrink: 0; }
+tbody tr.r-nomatch.del-checked { background: #fee2e2; outline: 2px solid #fca5a5; outline-offset: -2px; }
 .sku  { font-family: 'SFMono-Regular', Consolas, monospace; font-size: 11px; color: #555; }
 .sku-new { font-family: 'SFMono-Regular', Consolas, monospace; font-size: 11px; color: #065f46; font-weight: 600; }
 .detail { font-size: 10px; color: #aaa; margin-top: 1px; }
@@ -311,6 +319,7 @@ tbody tr.r-nosku     { background: #faf5ff; }
         <table>
           <thead>
             <tr>
+              <th style="width:32px;"></th>
               <th style="min-width:160px;">SKU</th>
               <th style="min-width:200px;">Shopify Title</th>
               <th style="min-width:180px;">Inventory Style</th>
@@ -324,6 +333,23 @@ tbody tr.r-nosku     { background: #faf5ff; }
           </thead>
           <tbody id="resultsBody"></tbody>
         </table>
+      </div>
+    </div>
+
+    <div id="deletionPanel" style="display:none;">
+      <div class="deletion-panel">
+        <div class="deletion-panel-title">⚠ Danger Zone — Export for Deletion</div>
+        <div class="deletion-panel-desc">
+          These variants have no match in inventory and may need to be removed from Shopify.<br>
+          Check the rows you want to delete, then download. The CSV will set <strong>Variant Command = DELETE</strong> for each selected row.<br>
+          <strong>This action cannot be undone once uploaded to Shopify. Double-check before importing.</strong>
+        </div>
+        <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+          <button class="exp-btn-danger" id="deletionExportBtn" onclick="downloadDeletionCSV()" disabled>
+            🗑 Download Deletion CSV (<span id="deletionCount">0</span> selected)
+          </button>
+          <button onclick="toggleSelectAllDeletion()" style="font-size:11px; color:#991b1b; background:none; border:1px solid #fca5a5; border-radius:4px; padding:4px 10px; cursor:pointer;" id="deletionSelectAllBtn">Select all</button>
+        </div>
       </div>
     </div>
 
@@ -345,6 +371,7 @@ let invFileNames  = [];
 let invDatasets   = [];
 let results       = [];
 let activeFilter  = 'all';
+let deletionSelected = new Set(); // tracks _shpRow references selected for deletion export
 let mappingsOpen      = false;
 let colorMappingsOpen = false;
 let colorMappings = [
@@ -553,8 +580,9 @@ function resetUploads() {
   inventoryData = null;
   invFileNames  = [];
   invDatasets   = [];
-  results       = [];
-  activeFilter  = 'all';
+  results          = [];
+  activeFilter     = 'all';
+  deletionSelected = new Set();
 
   // Reset Shopify drop zone
   const sz = document.getElementById('shopifyZone');
@@ -1226,6 +1254,11 @@ function renderResults() {
 
   renderTable();
   renderExport();
+
+  // Show/hide deletion panel — only in compile mode when viewing Missing in Inv
+  const showDeletion = appMode === 'compile' && activeFilter === 'no_match' && results.some(r => r.mode === 'no_match');
+  document.getElementById('deletionPanel').style.display = showDeletion ? 'block' : 'none';
+  if (showDeletion) updateDeletionUI();
 }
 
 function renderExport() {
@@ -1377,6 +1410,7 @@ function renderTable() {
       const missingInv = r.isMissing && r.missingIn === 'inventory';
       const missingShp = r.isMissing && r.missingIn === 'shopify';
       return `<tr class="${rowCls}">
+        <td style="width:32px;"></td>
         <td>${esc(r.sku) || '<em style="color:#ccc">—</em>'}</td>
         <td>${r.shpTitle ? esc(r.shpTitle) : '<em style="color:#ccc">Not in Shopify</em>'}</td>
         <td>${r.invStyle ? esc(r.invStyle) + (r.invColor ? `<span style="color:#aaa"> / ${esc(r.invColor)}</span>` : '') : '<em style="color:#ccc">—</em>'}</td>
@@ -1392,6 +1426,7 @@ function renderTable() {
     if (r.noSku) {
       const shpSize = r._shpRow ? (String(r._shpRow['Option2 Value']||'') + String(r._shpRow['Option3 Value']||'')).trim() : '';
       return `<tr class="${rowCls}">
+        <td style="width:32px;"></td>
         <td><em style="color:#ccc">—</em></td>
         <td>${esc(r.shpTitle)}</td>
         <td><em style="color:#ccc">—</em></td>
@@ -1403,7 +1438,11 @@ function renderTable() {
         <td><em style="color:#ccc">—</em></td>
       </tr>`;
     }
-    return `<tr class="${rowCls}">
+    const isDeletable  = appMode === 'compile' && r.mode === 'no_match' && r._shpRow;
+    const isDelChecked = isDeletable && deletionSelected.has(r._shpRow);
+    const rowIdx       = results.indexOf(r);
+    return `<tr class="${rowCls}${isDelChecked ? ' del-checked' : ''}">
+      <td style="width:32px; text-align:center; padding:0 6px;">${isDeletable ? `<input type="checkbox" class="del-checkbox" ${isDelChecked ? 'checked' : ''} onchange="toggleDeletionRow(this,${rowIdx})">` : ''}</td>
       <td>${skuCell}</td>
       <td>${esc(r.shpTitle)}${r.titleFormatIssue ? `<div class="detail" style="color:#b45309">⚠ Title format issue in Shopify — missing space after dash (e.g. "Shirt -Blue" → "Shirt - Blue")</div>` : ''}</td>
       <td>${r.invStyle ? esc(r.invStyle) + (r.invColor ? `<span style="color:#aaa"> / ${esc(r.invColor)}</span>` : '') : '<em style="color:#ccc">—</em>'}</td>
@@ -1631,6 +1670,59 @@ async function downloadAuditReport() {
   await xlsxDownload(wb, `Audit_Report_${today()}.xlsx`);
 }
 
+// ── Deletion helpers ──────────────────────────────────────────────────
+function toggleDeletionRow(checkbox, idx) {
+  const r = results[idx];
+  if (!r || !r._shpRow) return;
+  if (checkbox.checked) deletionSelected.add(r._shpRow);
+  else                  deletionSelected.delete(r._shpRow);
+  updateDeletionUI();
+  // Update row highlight without full re-render
+  const row = checkbox.closest('tr');
+  if (row) row.classList.toggle('del-checked', checkbox.checked);
+}
+
+function updateDeletionUI() {
+  const count = deletionSelected.size;
+  const btn   = document.getElementById('deletionExportBtn');
+  const countEl = document.getElementById('deletionCount');
+  const allBtn  = document.getElementById('deletionSelectAllBtn');
+  if (btn)     { btn.disabled = count === 0; }
+  if (countEl) { countEl.textContent = count; }
+  const noMatchRows = results.filter(r => r.mode === 'no_match' && r._shpRow);
+  if (allBtn)  { allBtn.textContent = deletionSelected.size >= noMatchRows.length ? 'Deselect all' : 'Select all'; }
+}
+
+function toggleSelectAllDeletion() {
+  const noMatchRows = results.filter(r => r.mode === 'no_match' && r._shpRow);
+  const allSelected = deletionSelected.size >= noMatchRows.length;
+  if (allSelected) {
+    noMatchRows.forEach(r => deletionSelected.delete(r._shpRow));
+  } else {
+    noMatchRows.forEach(r => deletionSelected.add(r._shpRow));
+  }
+  renderResults(); // re-render to update checkboxes
+}
+
+function downloadDeletionCSV() {
+  if (deletionSelected.size === 0) return;
+  const confirmed = confirm(
+    `⚠ WARNING: You are about to export ${deletionSelected.size} variant(s) for DELETION from Shopify.\n\n` +
+    `This CSV will set Variant Command = DELETE for each selected row.\n` +
+    `Uploading this file to Shopify CANNOT be undone.\n\n` +
+    `Are you sure you want to proceed?`
+  );
+  if (!confirmed) return;
+
+  const rows = results.filter(r => r.mode === 'no_match' && r._shpRow && deletionSelected.has(r._shpRow));
+  const csvRows = rows.map(r => {
+    const out = { ...r._shpRow };
+    out['Variant Command'] = 'DELETE';
+    return out;
+  });
+  downloadCSV(csvRows, `Shopify_DELETE_${today()}.csv`);
+}
+
 function downloadUpdatedShopify() {
   // ── UPDATE mode: overwrite UPC, weight, qty by SKU match ──────────────
   if (appMode === 'update') {
@@ -1734,10 +1826,14 @@ function downloadUpdatedShopify() {
         out['Variant Inventory Qty'] = pop._invRow['TotalAvailable'] || '0';
         out['_Sync Notes'] = '';
       } else {
+        // No match — skip in Compile mode (only export rows that were actually populated)
+        if (appMode === 'compile') return acc;
         out['_Sync Notes'] = 'Missing in inventory — needs manual SKU, UPC, weight & qty';
       }
     } else {
-      // Existing SKU row — sync qty + flag issues
+      // Existing SKU row — in Compile mode skip these entirely (they belong to Update mode)
+      if (appMode === 'compile') return acc;
+      // Update mode: sync qty + flag issues
       const key = cleanSku(sku);
       const inv = invBySku.get(key);
       if (inv) {
