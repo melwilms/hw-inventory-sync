@@ -355,8 +355,6 @@ let colorMappings = [
 ];
 
 let nameMappings = [
-  { shopify: 'Bliss Low Rise Thong',              inventory: 'Bliss Banded Thong'                          },
-  { shopify: 'Bliss Low Rise Bikini',             inventory: 'Bliss Banded Bikini'                         },
   { shopify: 'Sunday Pima Cami',                  inventory: 'Pima Sleep Cami'                             },
   { shopify: 'Perfect Pima Pajama Pants',         inventory: 'Perfect Pima Pant (Piping)'                  },
   { shopify: 'Perfect Pima Pajama Tee',           inventory: 'Perfect Pima Tee (Piping)'                   },
@@ -370,9 +368,9 @@ let nameMappings = [
   { shopify: 'Bliss Squareneck Tank',                inventory: 'Bliss Tank'                                  },
   { shopify: 'Bliss Under Short',                    inventory: 'Bliss Smoothing Short'                       },
   { shopify: 'Bliss Scoop Adjustable Bralette',      inventory: 'Bliss Scoop Adjustable'                      },
-  { shopify: 'Bliss Plunge Adjustable Bralette',     inventory: 'Bliss Adjustable'                            },
-  { shopify: 'Cloud Cotton Pajama Shorts',           inventory: 'Cloud Cotton Short'                          },
-  { shopify: 'Cloud Cotton Pajama Shirt',            inventory: 'Cloud Cotton T-Shirt'                        },
+  { shopify: 'Bliss Plunge Adjustable Bralette',     inventory: 'Bliss Plunge Adjustable Bralette'           },
+  { shopify: 'Cloud Cotton Shorts',                   inventory: 'Cloud Cotton Short'                          },
+  { shopify: 'Cloud Cotton Shirt',                   inventory: 'Cloud Cotton T-Shirt'                        },
   { shopify: 'BlissSmooth™ Bralette',                inventory: 'Bliss Smoothing Bralette'                    },
   { shopify: 'Base Balconette Bra',                  inventory: 'Base Balconette'                             },
   { shopify: 'Bliss Long Sleeve T-Shirt',            inventory: 'Bliss Long SleeveTee'                        },
@@ -383,6 +381,12 @@ let nameMappings = [
   { shopify: 'Invisible No Show Low Rise Thong',     inventory: 'No Show Low Rise Thong'                      },
   { shopify: 'Invisible No Show Hiphugger',          inventory: 'No Show Hiphugger'                           },
   { shopify: 'Invisible No Show Highwaist Thong',    inventory: 'No Show HW Thong'                            },
+  { shopify: 'Knit Seamless Bralette',               inventory: 'Seamless Modal Rib Bralette'                  },
+  { shopify: 'Knit Seamless French Cut Brief',        inventory: 'Seamless Modal Rib French Cut'                },
+  { shopify: 'ComfortMesh™ Brief',                    inventory: 'ComfortMesh Brief'                            },
+  { shopify: 'ComfortMesh™ Thong',                    inventory: 'ComfortMesh Low Rise Thong'                   },
+  { shopify: 'Bliss Scoop Bralette',                  inventory: 'Bliss Scoop Adjustable Bralette'              },
+  { shopify: 'Cloud Cotton Bandeau Bralette',         inventory: 'Cloud Cotton Logo Bandeau Bralette'           },
 ];
 
 // =====================================================================
@@ -1044,8 +1048,25 @@ function doComparison() {
     }
   });
   // Flag inventory items that had no matching Shopify row (name/color/size based)
+  // Build a lookup of (titleBase|color) from already-SKU'd Shopify rows to detect "already mapped" vs truly missing
+  const shpWithSkuIndex = new Set();
+  shpWithSku.forEach(r => {
+    const base  = (r['Title'] || '').split(/\s+-\s+/)[0].trim().toLowerCase();
+    const color = (r['Option1 Value'] || '').trim().toLowerCase();
+    shpWithSkuIndex.add(`${base}|${color}`);
+  });
+
   inventoryData.forEach(invRow => {
     if (!matchedInvSkus.has(invRow['CustomerSKU'])) {
+      const invStyleLow = (invRow['Style']  || '').trim().toLowerCase();
+      const invColorLow = (invRow['Color']  || '').trim().toLowerCase();
+      // Check both direct style name and any mapped Shopify equivalent
+      const mappedShpName   = (invToShp.get(invStyleLow) || invStyleLow);
+      const mappedShpColor  = resolveColorReverse ? (resolveColorReverse(invColorLow, invStyleLow) || '').toLowerCase() : '';
+      const alreadyInShpfy  = shpWithSkuIndex.has(`${mappedShpName}|${invColorLow}`)
+                           || shpWithSkuIndex.has(`${mappedShpName}|${mappedShpColor}`)
+                           || shpWithSkuIndex.has(`${invStyleLow}|${invColorLow}`)
+                           || shpWithSkuIndex.has(`${invStyleLow}|${mappedShpColor}`);
       results.push({
         sku:      invRow['CustomerSKU'],
         shpTitle: '',
@@ -1056,8 +1077,9 @@ function doComparison() {
         invQty:   invRow['TotalAvailable'] || '',
         invWt:    invRow['WeightInGrams']  || '',
         shpUpc:'', shpColor:'', shpSize:'', shpWt:'', shpQty:'',
-        mode: 'missing_shpfy', hasIssue: false,
-        pn:'Missing in Shopify', upc:'—', color:'—', size:'—', weight:'—', qty:'—',
+        mode: alreadyInShpfy ? 'already_in_shpfy' : 'missing_shpfy', hasIssue: false,
+        pn: alreadyInShpfy ? 'Already in Shopify' : 'Missing in Shopify',
+        upc:'—', color:'—', size:'—', weight:'—', qty:'—',
       });
     }
   });
@@ -1105,6 +1127,7 @@ function renderResults() {
   const issues      = results.filter(r => r.mode === 'compare' && r.hasIssue && !r.noSku).length;
   const pnMis       = results.filter(r => r.mode === 'compare' && r.pn === 'Mismatch' && !r.noSku).length;
   const misShp      = results.filter(r => r.mode === 'missing_shpfy' || (r.mode === 'compare' && r.pn === 'Missing in Shopify' && !r.noSku)).length;
+  const alrInShp    = results.filter(r => r.mode === 'already_in_shpfy').length;
   const misInvAudit = results.filter(r => r.mode === 'compare' && r.pn === 'Missing in Inventory' && !r.noSku).length;
   const auditNoSku  = results.filter(r => r.mode === 'compare' && r.noSku).length;
   const updChanged  = results.filter(r => r.mode === 'update' && !r.isMissing && !r.noSku && r.hasChanges).length;
@@ -1120,6 +1143,7 @@ function renderResults() {
     warnings:     results.filter(r => r.mode === 'populated' && r.hasIssue),
     no_match:     results.filter(r => r.mode === 'no_match'),
     missing:      results.filter(r => r.mode === 'missing_shpfy' || (r.mode === 'compare' && r.pn === 'Missing in Shopify' && !r.noSku)),
+    alr_in_shp:   results.filter(r => r.mode === 'already_in_shpfy'),
     clean:        results.filter(r => r.mode === 'compare' && !r.hasIssue && !r.isMissing && !r.noSku),
     issues:       results.filter(r => r.mode === 'compare' && r.hasIssue && !r.noSku),
     missing_inv:  results.filter(r => r.mode === 'compare' && r.pn === 'Missing in Inventory' && !r.noSku),
@@ -1139,6 +1163,7 @@ function renderResults() {
     { cls:'c-orange', key:'warnings',  num:warnings, lbl:'Warnings'         },
     { cls:'c-yellow', key:'no_match',  num:noMatch,  lbl:'Missing in Inv'   },
     { cls:'c-pink',   key:'missing',   num:misShp,   lbl:'Missing in Shpfy' },
+    { cls:'c-green',  key:'alr_in_shp', num:alrInShp, lbl:'Already in Shpfy' },
   ];
   const auditTiles = [
     { cls:'',         key:'all',           num:total,        lbl:'Total'            },
@@ -1175,7 +1200,8 @@ function renderResults() {
     { key:'updated',  label:`✓ Updated (${updated})`          },
     { key:'warnings', label:`⚠ Warnings (${warnings})`        },
     { key:'no_match', label:`Missing in Inv (${noMatch})`     },
-    { key:'missing',  label:`Missing in Shpfy (${misShp})`    },
+    { key:'missing',    label:`Missing in Shpfy (${misShp})`    },
+    { key:'alr_in_shp', label:`Already in Shpfy (${alrInShp})` },
   ];
   const auditChips = [
     { key:'all',           label:`All (${total})`                       },
@@ -1273,6 +1299,7 @@ function getFiltered() {
     case 'issues':      return results.filter(r => r.mode === 'compare' && r.hasIssue);
     case 'missing_inv': return results.filter(r => r.mode === 'compare' && r.pn === 'Missing in Inventory');
     case 'missing':     return results.filter(r => r.mode === 'missing_shpfy' || (r.mode === 'compare' && r.pn === 'Missing in Shopify'));
+    case 'alr_in_shp':  return results.filter(r => r.mode === 'already_in_shpfy');
     case 'pn':          return results.filter(r => r.mode === 'compare' && r.pn === 'Mismatch');
     case 'upd_changed': return results.filter(r => r.mode === 'update' && !r.isMissing && r.hasChanges);
     case 'upd_same':    return results.filter(r => r.mode === 'update' && !r.isMissing && !r.hasChanges);
@@ -1299,6 +1326,7 @@ function renderTable() {
                  : r.mode==='populated' && r.hasIssue                               ? 'r-bad'
                  : r.mode==='no_match'                                              ? 'r-nomatch'
                  : r.mode==='missing_shpfy'                                         ? 'r-missing'
+                 : r.mode==='already_in_shpfy'                                     ? 'r-ok'
                  : r.pn==='Missing in Shopify'                                      ? 'r-missing'
                  : r.mode==='update' && r.isMissing && r.missingIn==='inventory'    ? 'r-nomatch'
                  : r.mode==='update' && r.isMissing && r.missingIn==='shopify'      ? 'r-missing'
@@ -1323,6 +1351,8 @@ function renderTable() {
         : `<span class="sku-new">${esc(r.sku)}</span><div class="detail" style="color:#065f46">✓ imported</div>`
       : r.mode === 'missing_shpfy'
       ? `<span class="sku" style="color:#e91e8c">${esc(r.sku)}</span><div class="detail">not in Shopify</div>`
+      : r.mode === 'already_in_shpfy'
+      ? `<span class="sku" style="color:#059669">${esc(r.sku)}</span><div class="detail" style="color:#059669">✓ already in Shopify</div>`
       : r.sku ? `<span class="sku">${esc(r.sku)}</span>`
       : `<em style="color:#ccc">blank</em>`;
 
@@ -1333,7 +1363,7 @@ function renderTable() {
         const val = String(shpVal || '').trim();
         return `<span class="b b-nomatch">Missing in Inv</span>` + (val ? `<div class="detail">${esc(val)}</div>` : '');
       }
-      if (r.mode === 'missing_shpfy') {
+      if (r.mode === 'missing_shpfy' || r.mode === 'already_in_shpfy') {
         const val = String(invVal || '').trim();
         return val ? `<span style="color:#555">${esc(val)}</span>` : `<span style="color:#ddd">—</span>`;
       }
@@ -1377,7 +1407,7 @@ function renderTable() {
       <td>${skuCell}</td>
       <td>${esc(r.shpTitle)}${r.titleFormatIssue ? `<div class="detail" style="color:#b45309">⚠ Title format issue in Shopify — missing space after dash (e.g. "Shirt -Blue" → "Shirt - Blue")</div>` : ''}</td>
       <td>${r.invStyle ? esc(r.invStyle) + (r.invColor ? `<span style="color:#aaa"> / ${esc(r.invColor)}</span>` : '') : '<em style="color:#ccc">—</em>'}</td>
-      <td>${r.mode==='compare' ? (badge(r.pn) + (r.pn==='Mismatch'?`<div class="detail">Inv: ${esc(r.invStyle)}</div>`:'')) : (r.mode==='populated'?`<span class="b b-populated">✓</span>`:`<span class="b b-nomatch">No Match</span>`)}</td>
+      <td>${r.mode==='compare' ? (badge(r.pn) + (r.pn==='Mismatch'?`<div class="detail">Inv: ${esc(r.invStyle)}</div>`:'')) : r.mode==='populated' ? `<span class="b b-populated">✓</span>` : r.mode==='already_in_shpfy' ? `<span class="b b-match">✓ Already in Shopify</span>` : `<span class="b b-nomatch">No Match</span>`}</td>
       <td>${showVal(r.upc, r.invUpc, r.shpUpc)}${r.upcDotZero ? `<div class="detail" style="color:#b45309">⚠ Barcode has trailing ".0" in Shopify — fix in Shopify admin</div>` : ''}</td>
       <td>${r.titleOpt1Mismatch
           ? `<span class="b b-mismatch">✗ Mismatch</span><div class="detail">${esc(r.shpColor)} / ${esc(r.invColor)}</div>`
@@ -1418,6 +1448,7 @@ function rowColors(r) {
   if (r.mode === 'populated' && r.hasIssue)  return { bg: 'FFFFF3E0', fg: 'FFB45309' }; // amber
   if (r.mode === 'no_match')                 return { bg: 'FFFFF8E1', fg: 'FFB45309' }; // yellow
   if (r.mode === 'missing_shpfy')            return { bg: 'FFFCE4EC', fg: 'FF880E4F' }; // pink
+  if (r.mode === 'already_in_shpfy')        return { bg: 'FFE8F5E9', fg: 'FF2E7D32' }; // green
   if (r.mode === 'update' && r.isMissing && r.missingIn==='inventory') return { bg: 'FFFFF8E1', fg: 'FFB45309' };
   if (r.mode === 'update' && r.isMissing && r.missingIn==='shopify')   return { bg: 'FFFCE4EC', fg: 'FF880E4F' };
   if (r.mode === 'update' && r.hasChanges)   return { bg: 'FFE0F2FE', fg: 'FF0369A1' }; // blue
@@ -1528,6 +1559,7 @@ async function downloadCompileReport() {
                  : r.mode === 'populated' && r.hasIssue  ? 'Warning'
                  : r.mode === 'no_match'                 ? 'Missing in Inv'
                  : r.mode === 'missing_shpfy'            ? 'Missing in Shpfy'
+                 : r.mode === 'already_in_shpfy'        ? 'Already in Shpfy'
                  : '';
     const row = ws.addRow({
       status,
