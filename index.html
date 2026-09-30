@@ -161,14 +161,20 @@ tbody tr.r-nosku     { background: #faf5ff; }
 .tg-quick-add-wrap { display:inline-flex; align-items:center; gap:4px; }
 .tg-prefix-label { font-size:10px; color:#6366f1; font-weight:600; white-space:nowrap; }
 .tg-quick-input { background:#fff; color:#1a1a2e; border:1.5px solid #6366f1; border-radius:5px; padding:3px 7px; font-size:11px; outline:none; width:90px; }
-.tg-other-cell { display:table-cell; flex-wrap:wrap; gap:2px; }
-.tg-add-cell { background:#fafafa; }
+.tg-other-cell { overflow:hidden; }
+.tg-add-cell { background:#fafafa; border-left:2px solid #e0e0e8 !important; min-width:150px; }
 .tg-dup-cell { background:#fffbeb !important; }
 .tg-dup-flag { display:block; font-size:10px; font-weight:700; color:#b45309; letter-spacing:.03em; margin-bottom:3px; }
-.tg-sortable { cursor:pointer; }
+.tg-sortable { cursor:pointer; white-space:nowrap; }
 .tg-sortable:hover { background:#eaeaf2 !important; }
 .tg-sort-icon { font-size:11px; color:#6366f1; margin-left:2px; }
 .tg-sort-inactive { color:#ccc; }
+/* Filter row */
+.tg-filter-th { position:sticky; top:37px; z-index:2; background:#eeeef5; padding:4px 6px; border-bottom:2px solid #e0e0e8; border-left:1px solid #e8e8f0; }
+.tg-filter-th-name { position:sticky; top:37px; z-index:2; background:#eeeef5; padding:4px 6px; border-bottom:2px solid #e0e0e8; border-right:2px solid #e0e0e8; }
+.tg-filter-input { width:100%; box-sizing:border-box; border:1px solid #d0d0e0; border-radius:4px; padding:3px 6px 3px 20px; font-size:11px; outline:none; background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23aaa' stroke-width='2.5'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='M21 21l-4.35-4.35'/%3E%3C/svg%3E") no-repeat 5px center; color:#333; }
+.tg-filter-input:focus { border-color:#6366f1; }
+.tg-filter-input.active { border-color:#6366f1; background-color:#f5f5ff; }
 .tg-missing-required { background:#fff1f2 !important; }
 .tg-missing-required .tg-missing-dash { color:#e11d48; font-size:11px; font-weight:700; }
 .tg-missing-required:hover { background:#ffe4e6 !important; }
@@ -542,6 +548,7 @@ let priceChanges  = {};  // { [variantId]: { price: string, compareAt: string } 
 let tagBrowserCollapsed = false;
 let tagProductCollapsed = false;
 let tagSortState = { col: 'name', dir: 1 }; // col: 'name' | category key; dir: 1=asc -1=desc
+let tagColFilters = {}; // { [col]: searchString }
 let tagPriceFilter = 'all'; // filter for price issues table
 let mappingsOpen      = false;
 let colorMappingsOpen = false;
@@ -1269,20 +1276,56 @@ function renderTagProductSection() {
     return cat.strip(inBucket[0]).toLowerCase();
   }
 
-  const sortedEntries = [...productTags.entries()].sort(([titleA, tagsA], [titleB, tagsB]) => {
-    const col = tagSortState.col;
-    const dir = tagSortState.dir;
-    let a, b;
-    if (col === 'name') {
-      a = titleA.toLowerCase(); b = titleB.toLowerCase();
-    } else {
-      const chA = tagChanges[titleA] || { add: new Set(), remove: new Set() };
-      const chB = tagChanges[titleB] || { add: new Set(), remove: new Set() };
-      a = getBucketSortKey(tagsA, chA, col);
-      b = getBucketSortKey(tagsB, chB, col);
+  // Apply column filters
+  function rowMatchesFilters(title, origTags) {
+    for (const [col, q] of Object.entries(tagColFilters)) {
+      if (!q) continue;
+      if (col === 'name') {
+        if (!title.toLowerCase().includes(q)) return false;
+      } else if (col === 'other') {
+        const allTags = new Set([...origTags, ...(tagChanges[title]?.add || [])]);
+        const others = [...allTags].filter(t => !categorize(t));
+        if (!others.some(t => t.toLowerCase().includes(q))) return false;
+      } else {
+        const cat = TAG_CATEGORIES.find(c => c.key === col);
+        if (!cat) continue;
+        const allTags = new Set([...origTags, ...(tagChanges[title]?.add || [])]);
+        const inBucket = [...allTags].filter(t => cat.test(t.toLowerCase()));
+        if (!inBucket.some(t => cat.strip(t).toLowerCase().includes(q))) return false;
+      }
     }
-    return a < b ? -dir : a > b ? dir : 0;
-  });
+    return true;
+  }
+
+  const sortedEntries = [...productTags.entries()]
+    .filter(([title, tags]) => rowMatchesFilters(title, tags))
+    .sort(([titleA, tagsA], [titleB, tagsB]) => {
+      const col = tagSortState.col;
+      const dir = tagSortState.dir;
+      let a, b;
+      if (col === 'name') {
+        a = titleA.toLowerCase(); b = titleB.toLowerCase();
+      } else {
+        const chA = tagChanges[titleA] || { add: new Set(), remove: new Set() };
+        const chB = tagChanges[titleB] || { add: new Set(), remove: new Set() };
+        a = getBucketSortKey(tagsA, chA, col);
+        b = getBucketSortKey(tagsB, chB, col);
+      }
+      return a < b ? -dir : a > b ? dir : 0;
+    });
+
+  // Filter row inputs
+  function filterInput(col) {
+    const val = tagColFilters[col] || '';
+    return `<input class="tg-filter-input${val ? ' active' : ''}" id="tgf_${col}" value="${esc(val)}" placeholder="filter…"
+      oninput="setTagFilter('${col}',this.value)" onclick="event.stopPropagation()">`;
+  }
+  const filterRow = `<tr>
+    <th class="tg-filter-th-name">${filterInput('name')}</th>
+    ${TAG_CATEGORIES.map(c => `<th class="tg-filter-th">${filterInput(c.key)}</th>`).join('')}
+    <th class="tg-filter-th">${filterInput('other')}</th>
+    <th class="tg-filter-th"></th>
+  </tr>`;
 
   const tableRows = sortedEntries.map(([title, origTags]) => {
     const changes   = tagChanges[title] || { add: new Set(), remove: new Set() };
@@ -1374,14 +1417,30 @@ function renderTagProductSection() {
     <div class="tg-section-body${tagProductCollapsed ? ' collapsed' : ''}">
       <div class="table-wrap" style="max-height:560px;">
         <table class="tg-grid-table">
-          <thead><tr>
-            <th class="tg-name-header tg-sortable" onclick="toggleTagSort('name')">Product ${sortIcon('name')}</th>
-            ${headerCols}
-          </tr></thead>
+          <thead>
+            <tr>
+              <th class="tg-name-header tg-sortable" onclick="toggleTagSort('name')">Product ${sortIcon('name')}</th>
+              ${headerCols}
+            </tr>
+            ${filterRow}
+          </thead>
           <tbody>${tableRows || `<tr><td colspan="${TAG_CATEGORIES.length + 3}" class="empty-msg">No products found</td></tr>`}</tbody>
         </table>
       </div>
     </div>`;
+}
+
+function setTagFilter(col, val) {
+  if (val) tagColFilters[col] = val.toLowerCase();
+  else delete tagColFilters[col];
+  const tw = document.querySelector('#tagProductCard .table-wrap');
+  const scrollTop = tw ? tw.scrollTop : 0;
+  renderTagSection();
+  const tw2 = document.querySelector('#tagProductCard .table-wrap');
+  if (tw2) tw2.scrollTop = scrollTop;
+  // Restore focus to the filter input that was typed in
+  const input = document.getElementById('tgf_' + col);
+  if (input) { input.focus(); input.value = val || ''; }
 }
 
 function toggleTagSort(col) {
