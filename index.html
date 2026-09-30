@@ -135,6 +135,58 @@ tbody tr.r-nosku     { background: #faf5ff; }
 .b-changed    { background: #e0f2fe; color: #0369a1; }
 .b-nochange   { background: #f5f5f5; color: #888; }
 
+.tag-chip { display:inline-flex; align-items:center; gap:4px; background:#ede9fe; color:#5b21b6; border-radius:10px; padding:2px 7px 2px 9px; font-size:11px; margin:2px 2px; border:1px solid #ddd6fe; }
+.tag-chip button { background:none; border:none; cursor:pointer; color:#a78bfa; font-size:13px; line-height:1; padding:0 1px; }
+.tag-chip button:hover { color:#dc2626; }
+.tag-chip.pending-add    { background:#dcfce7; color:#15803d; border-color:#bbf7d0; }
+.tag-chip.pending-remove { background:#fee2e2; color:#dc2626; border-color:#fecaca; text-decoration:line-through; opacity:0.8; }
+
+/* Tag grid (categorized per-product view) */
+.tg-grid-table { width:100%; border-collapse:collapse; table-layout:fixed; }
+.tg-name-header   { width:220px; min-width:180px; text-align:left; padding:8px 12px; font-size:11px; font-weight:700; color:#555; text-transform:uppercase; letter-spacing:.05em; background:#f4f4f7; position:sticky; top:0; z-index:2; border-bottom:2px solid #e0e0e8; }
+.tg-cat-header    { width:160px; min-width:130px; text-align:left; padding:8px 10px; font-size:11px; font-weight:700; color:#555; text-transform:uppercase; letter-spacing:.05em; background:#f4f4f7; position:sticky; top:0; z-index:2; border-bottom:2px solid #e0e0e8; border-left:1px solid #e8e8f0; }
+.tg-other-header  { width:auto; min-width:160px; }
+.tg-add-header    { width:160px; min-width:140px; }
+.tg-product-row td { vertical-align:top; padding:7px 10px; border-bottom:1px solid #ebebf2; }
+.tg-product-row:hover td { background:#f9f9fc; }
+.tg-product-row.tg-has-changes td { background:#f5f3ff; }
+.tg-product-name-cell { font-size:12px; font-weight:600; color:#1a1a2e; padding:9px 12px !important; position:sticky; left:0; background:#fff; z-index:1; border-right:2px solid #e0e0e8; line-height:1.4; }
+.tg-product-row:hover .tg-product-name-cell { background:#f9f9fc; }
+.tg-product-row.tg-has-changes .tg-product-name-cell { background:#f5f3ff; }
+.tg-cat-cell { border-left:1px solid #ebebf2; }
+.tg-missing { cursor:pointer; }
+.tg-missing:hover { background:#f0f0ff !important; }
+.tg-missing-dash { color:#d1d1e0; font-size:16px; line-height:1; display:block; padding:2px 0; }
+.tg-missing:hover .tg-missing-dash { color:#6366f1; }
+.tg-quick-add-wrap { display:inline-flex; align-items:center; gap:4px; }
+.tg-prefix-label { font-size:10px; color:#6366f1; font-weight:600; white-space:nowrap; }
+.tg-quick-input { background:#fff; color:#1a1a2e; border:1.5px solid #6366f1; border-radius:5px; padding:3px 7px; font-size:11px; outline:none; width:90px; }
+.tg-other-cell { display:table-cell; flex-wrap:wrap; gap:2px; }
+.tg-add-cell { background:#fafafa; }
+.tg-dup-cell { background:#fffbeb !important; }
+.tg-dup-flag { display:block; font-size:10px; font-weight:700; color:#b45309; letter-spacing:.03em; margin-bottom:3px; }
+.tg-sortable { cursor:pointer; }
+.tg-sortable:hover { background:#eaeaf2 !important; }
+.tg-sort-icon { font-size:11px; color:#6366f1; margin-left:2px; }
+.tg-sort-inactive { color:#ccc; }
+.tg-missing-required { background:#fff1f2 !important; }
+.tg-missing-required .tg-missing-dash { color:#e11d48; font-size:11px; font-weight:700; }
+.tg-missing-required:hover { background:#ffe4e6 !important; }
+.tg-missing-required:hover .tg-missing-dash { color:#be123c; }
+.tg-other-add { display:inline-flex; align-items:center; gap:4px; margin:2px 0 0 2px; vertical-align:middle; }
+.tg-add-btn { background:#fff; border:1.5px solid #6366f1; color:#6366f1; border-radius:6px; padding:2px 8px; font-size:12px; cursor:pointer; line-height:1.4; font-weight:600; }
+.tg-add-btn:hover { background:#6366f1; color:#fff; }
+
+/* Collapsible section headers */
+.tg-section-header { display:flex; align-items:center; justify-content:space-between; cursor:pointer; user-select:none; padding:2px 0 10px; }
+.tg-section-header:hover .tg-toggle-btn { color:#6366f1; }
+.tg-toggle-btn { font-size:13px; color:#aaa; background:none; border:none; cursor:pointer; padding:0 4px; line-height:1; transition:transform 0.15s; }
+.tg-section-body.collapsed { display:none; }
+.tp-product-row { border-bottom:1px solid #f0f0f0; padding:10px 0; display:flex; align-items:flex-start; gap:12px; }
+.tp-product-row:last-child { border-bottom:none; }
+.tp-product-name { font-size:12px; font-weight:600; color:#333; min-width:220px; flex-shrink:0; padding-top:4px; }
+.tp-tag-add-mini { font-size:11px; border:1px solid #e0e0e0; border-radius:10px; padding:2px 8px; outline:none; width:120px; }
+.tp-tag-add-mini-btn { font-size:11px; background:#f5f5f5; border:1px solid #ddd; border-radius:10px; padding:2px 10px; cursor:pointer; margin-left:4px; }
 .exp-btn-danger { background: #7f1d1d; color: #fff; border: 2px solid #991b1b; border-radius: 8px; padding: 10px 18px; font-size: 13px; font-weight: 700; cursor: pointer; letter-spacing: 0.3px; display: flex; align-items: center; gap: 8px; transition: background 0.15s; }
 .exp-btn-danger:hover { background: #991b1b; }
 .exp-btn-danger:disabled { background: #ccc; border-color: #ccc; color: #fff; cursor: not-allowed; }
@@ -157,6 +209,83 @@ tbody tr.r-nomatch.del-checked { background: #fee2e2; outline: 2px solid #fca5a5
 
 .hidden { display: none !important; }
 .empty-msg { text-align: center; padding: 40px; color: #bbb; font-size: 13px; }
+
+/* Tag & Price mode */
+.tp-section-title { font-size: 13px; font-weight: 700; color: #1a1a1a; margin-bottom: 10px; letter-spacing: 0.2px; }
+.tp-pending-note { font-size: 12px; color: #b45309; font-weight: 600; background: #fffbeb; border: 1px solid #fcd34d; border-radius: 6px; padding: 6px 12px; margin-bottom: 10px; display: inline-block; }
+.tp-change-summary { background: #1a1a2e; border: 1px solid #334; border-radius: 8px; padding: 12px 16px; margin-bottom: 14px; }
+.tp-change-summary-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: #888; margin-bottom: 8px; }
+.tp-change-line { display: flex; align-items: center; gap: 8px; padding: 4px 0; font-size: 13px; }
+.tp-change-icon { width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+.tp-change-remove .tp-change-icon { background: #3b0f0f; color: #f87171; }
+.tp-change-add    .tp-change-icon { background: #0f2b1a; color: #4ade80; }
+.tp-change-tag { font-weight: 600; color: #e2e8f0; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tp-change-count { font-size: 12px; color: #888; white-space: nowrap; }
+.tp-change-undo { font-size: 11px; color: #6b7280; background: none; border: 1px solid #374151; border-radius: 4px; padding: 2px 7px; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
+.tp-change-undo:hover { color: #d1d5db; border-color: #6b7280; }
+
+/* Stat tile green variant */
+.stat-tile.c-green { border-color: #bbf7d0; }
+.stat-tile.c-green .stat-num { color: #16a34a; }
+
+/* Sync action banner */
+.pg-sync-action { display: flex; align-items: center; justify-content: space-between; gap: 20px; background: #0f2118; border: 1.5px solid #166534; border-radius: 10px; padding: 18px 22px; }
+.pg-sync-left { flex: 1; }
+.pg-sync-title { font-size: 15px; font-weight: 700; color: #4ade80; margin-bottom: 4px; }
+.pg-sync-desc  { font-size: 12px; color: #86efac; line-height: 1.5; }
+.pg-sync-btn   { background: #16a34a; color: #fff; border: none; border-radius: 8px; padding: 10px 20px; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; flex-shrink: 0; transition: background .15s; }
+.pg-sync-btn:hover { background: #15803d; }
+
+/* Price grid (prices mode) */
+.pg-table { width: 100%; border-collapse: collapse; }
+
+/* Product rows — bold, editable */
+.pg-product-row td { background: #1c2033; padding: 10px 14px; border-top: 2px solid #2d3149; }
+.pg-product-row.pg-changed td { background: #111d2b; border-top-color: #1d3a52; }
+.pg-product-row:hover td { background: #222640; }
+.pg-product-name { font-weight: 600; font-size: 13px; color: #e2e8f0; }
+.pg-variant-count { margin-left: 8px; font-size: 11px; font-weight: 400; color: #6b7280; }
+
+/* Variant sub-rows — read-only, indented, dimmer */
+.pg-variant-row td { padding: 4px 14px 4px 28px; font-size: 12px; border-bottom: 1px solid #161825; background: #141622; }
+.pg-variant-row:last-of-type td, .pg-variant-row + .pg-product-row td { border-bottom: none; }
+.pg-option-cell { color: #6b7280; min-width: 140px; }
+.pg-variant-price { font-family: 'SF Mono', 'Fira Code', monospace; color: #94a3b8; }
+.pg-variant-price.pg-v-error { color: #f87171; }
+.pg-variant-price.pg-v-warn  { color: #fbbf24; }
+.pg-variant-status { color: #ef4444; font-size: 11px; }
+
+/* Editable price cells on product rows */
+.pg-price-cell { cursor: pointer; min-width: 110px; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 13px; color: #cbd5e1; border-radius: 4px; padding: 2px 6px 2px 8px; transition: background .1s; position: relative; }
+.pg-price-cell:hover { background: #2a3050; color: #f1f5f9; }
+.pg-cell-text::after { content: ' ✎'; font-size: 10px; opacity: 0; color: #818cf8; }
+.pg-price-cell:hover .pg-cell-text::after { opacity: 1; }
+.pg-price-cell.pg-edited { color: #4ade80; background: rgba(74,222,128,.08); font-weight: 600; }
+.pg-price-cell.pg-error  { color: #f87171; background: rgba(248,113,113,.10); font-weight: 600; }
+.pg-price-cell.pg-warn   { color: #fbbf24; background: rgba(251,191,36,.09); font-weight: 600; }
+.pg-price-cell.pg-fill-target { background: rgba(99,102,241,.18) !important; outline: 1px solid #6366f1; color: #c7d2fe !important; }
+.pg-fill-handle { position: absolute; bottom: 3px; right: 3px; width: 7px; height: 7px; background: #6366f1; border-radius: 1px; cursor: crosshair; opacity: 0; transition: opacity .1s; flex-shrink: 0; }
+.pg-price-cell:hover .pg-fill-handle { opacity: 1; }
+.pg-price-input { width: 100%; background: #1e293b; color: #f1f5f9; border: 2px solid #6366f1; border-radius: 4px; padding: 3px 7px; font-size: 13px; font-family: 'SF Mono', 'Fira Code', monospace; outline: none; box-sizing: border-box; }
+.pg-status-cell { color: #64748b; font-size: 12px; }
+.pg-ok { color: #22c55e; font-weight: 600; }
+.tp-tag-input-row { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; }
+.tp-tag-input { border: 1px solid #e8e8e8; border-radius: 6px; padding: 6px 10px; font-size: 12px; flex: 1; max-width: 300px; }
+.tp-tag-input:focus { outline: none; border-color: #555; }
+.tp-add-btn { padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; background: #1a1a1a; color: white; border: none; }
+.tp-add-btn:hover { background: #333; }
+.tp-remove-btn { padding: 3px 10px; border-radius: 5px; font-size: 11px; font-weight: 600; cursor: pointer; background: #fff1f2; color: #be123c; border: 1px solid #fecdd3; }
+.tp-remove-btn:hover { background: #fecdd3; }
+.price-editable { cursor: pointer; }
+.price-edited td.tp-price-cell { background: #f0fdfa; color: #0f766e; font-weight: 600; }
+.tp-price-input { width: 80px; border: 1px solid #2dd4bf; border-radius: 4px; padding: 3px 6px; font-size: 12px; font-weight: 600; color: #0f766e; }
+.tp-price-input:focus { outline: none; border-color: #0d9488; }
+.tp-issue-badge { display: inline-block; padding: 2px 7px; border-radius: 10px; font-size: 10px; font-weight: 700; white-space: nowrap; }
+.tp-issue-no-price    { background: #ffebee; color: #c62828; }
+.tp-issue-no-compare  { background: #fff3e0; color: #e65100; }
+.tp-issue-mismatch    { background: #fce4ec; color: #880e4f; }
+.tp-bulk-btn { padding: 7px 16px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; background: white; color: #0f766e; border: 2px solid #2dd4bf; transition: all 0.15s; }
+.tp-bulk-btn:hover { background: #f0fdfa; }
 </style>
 </head>
 <body>
@@ -198,6 +327,24 @@ tbody tr.r-nomatch.del-checked { background: #fee2e2; outline: 2px solid #fca5a5
           <div class="mode-icon">🔍</div>
           <div class="mode-title">Audit</div>
           <div class="mode-desc">Verify data integrity — compares existing Shopify SKUs against inventory for mismatches</div>
+        </div>
+      </label>
+      <label class="mode-card" id="modeTags" for="radioTags">
+        <input type="radio" id="radioTags" name="appMode" value="tags" onchange="setMode('tags')" style="display:none">
+        <div class="mode-radio"><span class="mode-radio-dot"></span></div>
+        <div class="mode-content">
+          <div class="mode-icon">🏷️</div>
+          <div class="mode-title">Tags</div>
+          <div class="mode-desc">Browse &amp; bulk-edit product tags from a Matrixify export</div>
+        </div>
+      </label>
+      <label class="mode-card" id="modePrices" for="radioPrices">
+        <input type="radio" id="radioPrices" name="appMode" value="prices" onchange="setMode('prices')" style="display:none">
+        <div class="mode-radio"><span class="mode-radio-dot"></span></div>
+        <div class="mode-content">
+          <div class="mode-icon">💲</div>
+          <div class="mode-title">Prices</div>
+          <div class="mode-desc">Review &amp; edit prices and compare-at prices across all variants from a Matrixify export</div>
         </div>
       </label>
     </div>
@@ -310,6 +457,22 @@ tbody tr.r-nomatch.del-checked { background: #fee2e2; outline: 2px solid #fca5a5
   <!-- Results -->
   <div id="resultsSection" class="hidden">
 
+    <!-- Tags mode results -->
+    <div id="tagsSection" style="display:none;">
+      <div class="stats-row" id="tagStatsRow"></div>
+      <div id="tagBrowserCard" class="card" style="padding:16px 20px;"></div>
+      <div id="tagProductCard" class="card" style="padding:16px 20px; margin-top:0;"></div>
+    </div>
+
+    <!-- Prices mode results -->
+    <div id="pricesSection" style="display:none;">
+      <div class="stats-row" id="priceStatsRow"></div>
+      <div class="filter-row" id="priceFilterRow"></div>
+      <div id="pricesGridCard" class="card" style="padding:16px 20px;"></div>
+    </div>
+
+    <!-- Standard mode results (compile / update / audit) -->
+    <div id="standardSection">
     <div class="stats-row" id="statsRow"></div>
     <div class="filter-row" id="filterRow"></div>
 
@@ -353,6 +516,8 @@ tbody tr.r-nomatch.del-checked { background: #fee2e2; outline: 2px solid #fca5a5
       </div>
     </div>
 
+    </div><!-- end standardSection -->
+
     <div class="card" id="exportCard"></div>
 
   </div>
@@ -362,7 +527,7 @@ tbody tr.r-nomatch.del-checked { background: #fee2e2; outline: 2px solid #fca5a5
 // =====================================================================
 // STATE
 // =====================================================================
-let appMode       = null;  // 'compile' | 'update' | 'audit'
+let appMode       = null;  // 'compile' | 'update' | 'audit' | 'tags' | 'prices'
 let updateFields  = { upc: true, weight: true, qty: true };
 let exportColumns = { sku: true, barcode: true, weight: true, weightUnit: true, price: true, comparePrice: true, taxable: true, inventoryQty: true };
 let shopifyData   = null;
@@ -372,6 +537,12 @@ let invDatasets   = [];
 let results       = [];
 let activeFilter  = 'all';
 let deletionSelected = new Set(); // tracks _shpRow references selected for deletion export
+let tagChanges    = {};  // { [productTitle]: { add: Set, remove: Set } }
+let priceChanges  = {};  // { [variantId]: { price: string, compareAt: string } }
+let tagBrowserCollapsed = false;
+let tagProductCollapsed = false;
+let tagSortState = { col: 'name', dir: 1 }; // col: 'name' | category key; dir: 1=asc -1=desc
+let tagPriceFilter = 'all'; // filter for price issues table
 let mappingsOpen      = false;
 let colorMappingsOpen = false;
 let colorMappings = [
@@ -467,7 +638,7 @@ function handleShopifyDrop(files) {
       <div class="drop-icon">✅</div>
       <div class="drop-title" style="color:#2e7d32">${esc(file.name)}</div>
       <div class="drop-sub">${shopifyData.length.toLocaleString()} rows — ${withSku} with SKU, ${withoutSku} blank</div>
-      <input type="file" id="shopifyInput" accept=".csv,.xlsx,.xls" style="display:none">`;
+      <input type="file" id="shopifyInput" accept=".csv,.xlsx,.xls" style="opacity:0;position:absolute;width:0;height:0;">`;
     document.getElementById('shopifyInput').addEventListener('change', e => handleShopifyDrop(e.target.files));
     zone.onclick = () => document.getElementById('shopifyInput').click();
     updateRunBtn();
@@ -496,7 +667,7 @@ function handleInventoryDrop(files) {
           <div class="drop-title" style="color:#2e7d32">${invFileNames.length} file${invFileNames.length > 1 ? 's' : ''} merged</div>
           <div class="drop-sub">${inventoryData.length.toLocaleString()} unique SKUs</div>
           <div class="file-tags">${invFileNames.map(n => `<span class="file-tag">📄 ${esc(n)}</span>`).join('')}</div>
-          <input type="file" id="inventoryInput" accept=".csv,.xlsx,.xls" multiple style="display:none">`;
+          <input type="file" id="inventoryInput" accept=".csv,.xlsx,.xls" multiple style="opacity:0;position:absolute;width:0;height:0;">`;
         document.getElementById('inventoryInput').addEventListener('change', e => handleInventoryDrop(e.target.files));
         zone.onclick = () => document.getElementById('inventoryInput').click();
         updateRunBtn();
@@ -552,18 +723,25 @@ function toggleColorMappings()  {
 function setMode(mode) {
   if (appMode === mode) return;
   appMode = mode;
-  document.getElementById('modeCompile').classList.toggle('selected', mode === 'compile');
-  document.getElementById('modeUpdate').classList.toggle('selected',  mode === 'update');
-  document.getElementById('modeAudit').classList.toggle('selected',   mode === 'audit');
+  const matrixifyMode = mode === 'tags' || mode === 'prices';
+  document.getElementById('modeCompile').classList.toggle('selected',  mode === 'compile');
+  document.getElementById('modeUpdate').classList.toggle('selected',   mode === 'update');
+  document.getElementById('modeAudit').classList.toggle('selected',    mode === 'audit');
+  document.getElementById('modeTags').classList.toggle('selected',     mode === 'tags');
+  document.getElementById('modePrices').classList.toggle('selected',   mode === 'prices');
   document.getElementById('radioCompile').checked = mode === 'compile';
   document.getElementById('radioUpdate').checked  = mode === 'update';
   document.getElementById('radioAudit').checked   = mode === 'audit';
+  document.getElementById('radioTags').checked    = mode === 'tags';
+  document.getElementById('radioPrices').checked  = mode === 'prices';
   // Unlock steps 2, 3, 4
   document.getElementById('uploadCard').classList.remove('card-locked');
   document.getElementById('mappingsCard').classList.remove('card-locked');
   document.getElementById('colorMappingsCard').classList.remove('card-locked');
   // Update Fields card only unlocks in Update mode
   document.getElementById('updateFieldsCard').classList.toggle('card-locked', mode !== 'update');
+  // Clear tag & price state on mode change
+  tagChanges = {}; priceChanges = {}; tagPriceFilter = 'all';
   // Reset field checkboxes to defaults when switching modes
   updateFields  = { upc: true, weight: true, qty: true };
   exportColumns = { sku: true, barcode: true, weight: true, weightUnit: true, price: true, comparePrice: true, taxable: true, inventoryQty: true };
@@ -587,22 +765,29 @@ function resetUploads() {
   // Reset Shopify drop zone
   const sz = document.getElementById('shopifyZone');
   sz.className = 'drop-zone';
+  const matrixifyMode = appMode === 'tags' || appMode === 'prices';
+  const shopifyLabel = matrixifyMode ? 'Drop Matrixify export here' : 'Drop Shopify export here';
+  const shopifySub   = matrixifyMode ? 'CSV — Matrixify product export with tags &amp; prices' : 'CSV or XLSX — rows with or without SKUs';
   sz.innerHTML = `
-    <input type="file" id="shopifyInput" accept=".csv,.xlsx,.xls" style="display:none">
+    <input type="file" id="shopifyInput" accept=".csv,.xlsx,.xls" style="opacity:0;position:absolute;width:0;height:0;">
     <div class="drop-icon">🛍️</div>
-    <div class="drop-title">Drop Shopify export here</div>
-    <div class="drop-sub">CSV or XLSX — rows with or without SKUs</div>
+    <div class="drop-title">${shopifyLabel}</div>
+    <div class="drop-sub">${shopifySub}</div>
     <div style="font-size:22px; color:#ccc; margin-top:10px;">⬆</div>
     <div class="file-tags" id="shopifyTags"></div>`;
   document.getElementById('shopifyInput').addEventListener('change', e => handleShopifyDrop(e.target.files));
   sz.onclick = () => document.getElementById('shopifyInput').click();
   // Do NOT call setupDrop here — drag listeners are registered once in DOMContentLoaded
 
+  // Hide/show inventory zone depending on mode
+  const inventoryWrapper = document.getElementById('inventoryZone').closest('div');
+  if (inventoryWrapper) inventoryWrapper.style.display = (appMode === 'tags' || appMode === 'prices') ? 'none' : '';
+
   // Reset Inventory drop zone
   const iz = document.getElementById('inventoryZone');
   iz.className = 'drop-zone';
   iz.innerHTML = `
-    <input type="file" id="inventoryInput" accept=".csv,.xlsx,.xls" multiple style="display:none">
+    <input type="file" id="inventoryInput" accept=".csv,.xlsx,.xls" multiple style="opacity:0;position:absolute;width:0;height:0;">
     <div class="drop-icon">📦</div>
     <div class="drop-title">Drop inventory file(s) here</div>
     <div class="drop-sub">CSV or XLSX — drop multiple batches, merged automatically</div>
@@ -625,11 +810,19 @@ function resetUploads() {
 
 function updateRunBtn() {
   const btn = document.getElementById('runBtn');
-  const ready = appMode && shopifyData && inventoryData;
+  const matrixifyMode = appMode === 'tags' || appMode === 'prices';
+  const ready = matrixifyMode ? (shopifyData != null) : (appMode && shopifyData && inventoryData);
   btn.disabled = !ready;
-  btn.textContent = ready ? `▶  Run ${appMode === 'compile' ? 'Compile' : appMode === 'update' ? 'Update' : 'Audit'}`
-                          : !appMode ? 'Select a mode to continue'
-                          : 'Upload both files to run';
+  const modeLabel = appMode === 'compile' ? 'Compile'
+                  : appMode === 'update'  ? 'Update'
+                  : appMode === 'audit'   ? 'Audit'
+                  : appMode === 'tags'    ? 'Tags'
+                  : appMode === 'prices'  ? 'Prices'
+                  : '';
+  btn.textContent = ready    ? `▶  Run ${modeLabel}`
+                 : !appMode  ? 'Select a mode to continue'
+                 : matrixifyMode ? 'Upload Matrixify export to run'
+                 : 'Upload both files to run';
 }
 
 // =====================================================================
@@ -804,9 +997,882 @@ function weightCompare(invWt, shpWt, inInv, inShp) {
 }
 
 // =====================================================================
+// TAGS MODE
+// =====================================================================
+function isBlankOrZero(v) {
+  const s = String(v || '').trim();
+  return s === '' || s === '0' || s === '0.00';
+}
+
+function runTags() {
+  tagChanges = {}; tagPriceFilter = 'all';
+  const btn = document.getElementById('runBtn');
+  btn.disabled = true; btn.textContent = 'Running…'; btn.classList.add('running');
+  setTimeout(() => {
+    try { doTags(); }
+    finally { btn.disabled = false; btn.textContent = '▶  Run Tags'; btn.classList.remove('running'); }
+  }, 30);
+}
+
+function doTags() {
+  document.getElementById('standardSection').style.display  = 'none';
+  document.getElementById('pricesSection').style.display    = 'none';
+  document.getElementById('tagsSection').style.display      = '';
+  document.getElementById('resultsSection').classList.remove('hidden');
+  renderTagSection();
+  renderExport();
+  document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// =====================================================================
+// PRICES MODE
+// =====================================================================
+function runPrices() {
+  priceChanges = {}; tagPriceFilter = 'all';
+  const btn = document.getElementById('runBtn');
+  btn.disabled = true; btn.textContent = 'Running…'; btn.classList.add('running');
+  setTimeout(() => {
+    try { doPrices(); }
+    finally { btn.disabled = false; btn.textContent = '▶  Run Prices'; btn.classList.remove('running'); }
+  }, 30);
+}
+
+function doPrices() {
+  document.getElementById('standardSection').style.display = 'none';
+  document.getElementById('tagsSection').style.display     = 'none';
+  document.getElementById('pricesSection').style.display   = '';
+  document.getElementById('resultsSection').classList.remove('hidden');
+  renderPricesMode();
+  renderExport();
+  document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function renderTagSection() {
+  // Build tag data: one entry per unique product title
+  const productTags = new Map(); // title -> Set of tags
+  (shopifyData || []).forEach(row => {
+    const title = String(row['Title'] || '').trim();
+    if (!title) return;
+    if (!productTags.has(title)) productTags.set(title, new Set());
+    const tagsStr = String(row['Tags'] || '').trim();
+    if (tagsStr) {
+      tagsStr.split(',').map(t => t.trim()).filter(Boolean).forEach(t => productTags.get(title).add(t));
+    }
+  });
+
+  // Build tag frequency map: tag -> Set of product titles
+  const tagProducts = new Map();
+  productTags.forEach((tags, title) => {
+    tags.forEach(tag => {
+      if (!tagProducts.has(tag)) tagProducts.set(tag, new Set());
+      tagProducts.get(tag).add(title);
+    });
+  });
+
+  const totalProducts = productTags.size;
+  const uniqueTags    = tagProducts.size;
+  const withChanges   = Object.keys(tagChanges).filter(t => {
+    const c = tagChanges[t];
+    return (c.add && c.add.size > 0) || (c.remove && c.remove.size > 0);
+  }).length;
+
+  // Stat tiles
+  document.getElementById('tagStatsRow').innerHTML = `
+    <div class="stat-tile">
+      <div class="stat-num">${totalProducts.toLocaleString()}</div>
+      <div class="stat-lbl">Total Products</div>
+    </div>
+    <div class="stat-tile c-blue">
+      <div class="stat-num">${uniqueTags.toLocaleString()}</div>
+      <div class="stat-lbl">Unique Tags</div>
+    </div>
+    <div class="stat-tile c-orange">
+      <div class="stat-num">${withChanges.toLocaleString()}</div>
+      <div class="stat-lbl">Products with Changes</div>
+    </div>`;
+
+  // Sort tags by product count descending
+  const sortedTags = [...tagProducts.entries()].sort((a,b) => b[1].size - a[1].size || a[0].localeCompare(b[0]));
+
+  // Build change summary: aggregate across all products
+  // removeSummary: tag -> count of products it's being removed from
+  // addSummary:    tag -> count of products it's being added to
+  const removeSummary = new Map();
+  const addSummary    = new Map();
+  Object.entries(tagChanges).forEach(([title, c]) => {
+    if (c.remove) c.remove.forEach(t => removeSummary.set(t, (removeSummary.get(t) || 0) + 1));
+    if (c.add)    c.add.forEach(t    => addSummary.set(t,    (addSummary.get(t)    || 0) + 1));
+  });
+
+  let pendingNote = '';
+  if (withChanges > 0) {
+    const removeLines = [...removeSummary.entries()]
+      .sort((a,b) => b[1]-a[1] || a[0].localeCompare(b[0]))
+      .map(([tag, n]) => `<div class="tp-change-line tp-change-remove">
+        <span class="tp-change-icon">✕</span>
+        <span class="tp-change-tag">${esc(tag)}</span>
+        <span class="tp-change-count">removed from ${n} product${n !== 1 ? 's' : ''}</span>
+        <button class="tp-change-undo" onclick="undoTagChange('remove','${tag.replace(/'/g,"\\'")}')">undo</button>
+      </div>`).join('');
+    const addLines = [...addSummary.entries()]
+      .sort((a,b) => b[1]-a[1] || a[0].localeCompare(b[0]))
+      .map(([tag, n]) => `<div class="tp-change-line tp-change-add">
+        <span class="tp-change-icon">+</span>
+        <span class="tp-change-tag">${esc(tag)}</span>
+        <span class="tp-change-count">added to ${n} product${n !== 1 ? 's' : ''}</span>
+        <button class="tp-change-undo" onclick="undoTagChange('add','${tag.replace(/'/g,"\\'")}')">undo</button>
+      </div>`).join('');
+    pendingNote = `<div class="tp-change-summary">
+      <div class="tp-change-summary-title">Pending Tag Changes</div>
+      ${removeLines}${addLines}
+    </div>`;
+  }
+
+  const tableRows = sortedTags.map(([tag, prods]) => {
+    const escaped = esc(tag);
+    return `<tr>
+      <td>${escaped}</td>
+      <td style="text-align:center;">${prods.size}</td>
+      <td><button class="tp-remove-btn" onclick="removeTagFromAll('${tag.replace(/'/g, "\\'")}')">Remove from all</button></td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('tagBrowserCard').innerHTML = `
+    <div class="tg-section-header" onclick="tagBrowserCollapsed=!tagBrowserCollapsed;renderTagSection();">
+      <div class="tp-section-title" style="margin-bottom:0;">Bulk Tag Editor</div>
+      <button class="tg-toggle-btn" style="transform:rotate(${tagBrowserCollapsed?'-90deg':'0deg'})">${tagBrowserCollapsed ? '▼' : '▲'}</button>
+    </div>
+    <div class="tg-section-body${tagBrowserCollapsed ? ' collapsed' : ''}">
+      ${pendingNote}
+      <div class="tp-tag-input-row">
+        <input class="tp-tag-input" id="newTagInput" type="text" placeholder="New tag…">
+        <button class="tp-add-btn" onclick="addTagToAll()">Add to all products</button>
+      </div>
+      <div class="table-wrap" style="max-height:340px;">
+        <table>
+          <thead><tr>
+            <th style="min-width:200px;">Tag</th>
+            <th style="min-width:80px; text-align:center;">Products</th>
+            <th style="min-width:120px;"></th>
+          </tr></thead>
+          <tbody>${tableRows || '<tr><td colspan="3" class="empty-msg">No tags found</td></tr>'}</tbody>
+        </table>
+      </div>
+    </div>`;
+
+  renderTagProductSection();
+}
+
+function addTagToAll() {
+  const input = document.getElementById('newTagInput');
+  const tag = (input ? input.value.trim() : '');
+  if (!tag) return;
+  const titles = [...new Set((shopifyData || []).map(r => String(r['Title'] || '').trim()).filter(Boolean))];
+  titles.forEach(title => {
+    if (!tagChanges[title]) tagChanges[title] = { add: new Set(), remove: new Set() };
+    tagChanges[title].add.add(tag);
+    tagChanges[title].remove.delete(tag);
+  });
+  if (input) input.value = '';
+  renderTagSection();
+  renderExport();
+}
+
+function removeTagFromAll(tag) {
+  if (!confirm(`Remove tag "${tag}" from all products?`)) return;
+  const titles = [...new Set((shopifyData || []).map(r => String(r['Title'] || '').trim()).filter(Boolean))];
+  titles.forEach(title => {
+    if (!tagChanges[title]) tagChanges[title] = { add: new Set(), remove: new Set() };
+    tagChanges[title].remove.add(tag);
+    tagChanges[title].add.delete(tag);
+  });
+  renderTagSection();
+  renderExport();
+}
+
+function undoTagChange(action, tag) {
+  // Remove this tag's add or remove across ALL products that have it
+  Object.keys(tagChanges).forEach(title => {
+    const c = tagChanges[title];
+    if (action === 'remove' && c.remove) c.remove.delete(tag);
+    if (action === 'add'    && c.add)    c.add.delete(tag);
+  });
+  renderTagSection();
+  renderExport();
+}
+
+// Tag categories — prefix-based. Edit these to match your tag taxonomy.
+const TAG_CATEGORIES = [
+  {
+    key: 'breadcrumb', label: 'Breadcrumb', addPrefix: 'breadcrumb1:',
+    test:  t => /^breadcrumb\d*:/i.test(t),
+    strip: t => t.replace(/^breadcrumb\d*:/i, '')
+  },
+  {
+    key: 'sizeguide', label: 'Size Guide', addPrefix: 'size-guide::',
+    test:  t => /^size-guide:/i.test(t),
+    strip: t => t.replace(/^size-guide::?/i, '')
+  },
+  {
+    key: 'matchback', label: 'Matchback', addPrefix: 'matchback:',
+    test:  t => /^matchback:/i.test(t),
+    strip: t => t.replace(/^matchback:/i, '')
+  },
+  {
+    key: 'bulktier', label: 'Bulk Tier', addPrefix: 'bulk:',
+    test:  t => /^bulk:/i.test(t),
+    strip: t => t.replace(/^bulk:/i, '')
+  },
+  {
+    key: 'product', label: 'Product', addPrefix: 'product:', required: true,
+    test:  t => /^product:/i.test(t),
+    strip: t => t.replace(/^product:/i, '')
+  },
+];
+
+function renderTagProductSection() {
+  // Build per-product tag map from shopifyData
+  const productTags = new Map(); // title -> Set of original tags
+  (shopifyData || []).forEach(row => {
+    const title = String(row['Title'] || '').trim();
+    if (!title || productTags.has(title)) return;
+    const tagsStr = String(row['Tags'] || '').trim();
+    const tags = tagsStr ? new Set(tagsStr.split(',').map(t => t.trim()).filter(Boolean)) : new Set();
+    productTags.set(title, tags);
+  });
+
+  // Helper: classify one tag into a category key (or null for "other")
+  function categorize(tag) {
+    const t = tag.toLowerCase();
+    for (const cat of TAG_CATEGORIES) {
+      if (cat.test(t)) return cat.key;
+    }
+    return null;
+  }
+
+  // Sort indicator helper
+  function sortIcon(col) {
+    if (tagSortState.col !== col) return `<span class="tg-sort-icon tg-sort-inactive">↕</span>`;
+    return `<span class="tg-sort-icon">${tagSortState.dir === 1 ? '↑' : '↓'}</span>`;
+  }
+
+  const headerCols = TAG_CATEGORIES.map(c =>
+    `<th class="tg-cat-header tg-sortable" onclick="toggleTagSort('${c.key}')" title="Sort by ${esc(c.label)}">${esc(c.label)} ${sortIcon(c.key)}</th>`
+  ).join('') + `<th class="tg-cat-header tg-other-header">Other</th><th class="tg-cat-header tg-add-header">Add Tag</th>`;
+
+  // Sort entries
+  function getBucketSortKey(origTags, changes, catKey) {
+    const allTags = new Set([...origTags, ...(changes.add || [])]);
+    const cat = TAG_CATEGORIES.find(c => c.key === catKey);
+    const inBucket = [...allTags].filter(t => cat && cat.test(t.toLowerCase()));
+    if (inBucket.length === 0) return '￿'; // missing → sort last
+    return cat.strip(inBucket[0]).toLowerCase();
+  }
+
+  const sortedEntries = [...productTags.entries()].sort(([titleA, tagsA], [titleB, tagsB]) => {
+    const col = tagSortState.col;
+    const dir = tagSortState.dir;
+    let a, b;
+    if (col === 'name') {
+      a = titleA.toLowerCase(); b = titleB.toLowerCase();
+    } else {
+      const chA = tagChanges[titleA] || { add: new Set(), remove: new Set() };
+      const chB = tagChanges[titleB] || { add: new Set(), remove: new Set() };
+      a = getBucketSortKey(tagsA, chA, col);
+      b = getBucketSortKey(tagsB, chB, col);
+    }
+    return a < b ? -dir : a > b ? dir : 0;
+  });
+
+  const tableRows = sortedEntries.map(([title, origTags]) => {
+    const changes   = tagChanges[title] || { add: new Set(), remove: new Set() };
+    const safeTitle = title.replace(/'/g, "\\'");
+    const allTags   = new Set([...origTags, ...(changes.add || [])]);
+    const hasChanges = (changes.add && changes.add.size > 0) || (changes.remove && changes.remove.size > 0);
+
+    // Bucket tags by category
+    const buckets = {};
+    TAG_CATEGORIES.forEach(c => { buckets[c.key] = []; });
+    const otherTags = [];
+    [...allTags].forEach(tag => {
+      const key = categorize(tag);
+      if (key) buckets[key].push(tag);
+      else otherTags.push(tag);
+    });
+
+    // Returns true if any sub-prefix (e.g. "breadcrumb1:") appears more than once
+    function hasDuplicateSubPrefix(tags) {
+      const counts = {};
+      for (const tag of tags) {
+        const sub = tag.slice(0, tag.indexOf(':') + 1).toLowerCase();
+        counts[sub] = (counts[sub] || 0) + 1;
+        if (counts[sub] > 1) return true;
+      }
+      return false;
+    }
+
+    // Render a single tag chip; stripFn is optional per-category strip function
+    function chip(tag, stripFn) {
+      const safeTag = tag.replace(/'/g, "\\'");
+      const isPendingRemove = (changes.remove || new Set()).has(tag);
+      const isPendingAdd    = (changes.add    || new Set()).has(tag) && !origTags.has(tag);
+      const cls = isPendingAdd ? 'tag-chip pending-add' : isPendingRemove ? 'tag-chip pending-remove' : 'tag-chip';
+      const suffix = stripFn ? stripFn(tag) : (tag.includes(':') ? tag.split(':').slice(1).join(':') : tag);
+      return `<span class="${cls}" title="${esc(tag)}">${esc(suffix)}<button onclick="toggleProductTag('${safeTitle}','${safeTag}')" title="${isPendingRemove ? 'Undo' : 'Remove'}">×</button></span>`;
+    }
+
+    // Render a category cell
+    const catCells = TAG_CATEGORIES.map(cat => {
+      const tags = buckets[cat.key];
+      if (tags.length === 0) {
+        // Missing — show dash with inline quick-add on click
+        const inputId = `qi_${title.replace(/\W/g,'_')}_${cat.key}`;
+        const prefixSafe = cat.addPrefix.replace(/'/g, "\\'");
+        return `<td class="tg-cat-cell tg-missing${cat.required ? ' tg-missing-required' : ''}" onclick="showQuickAdd('${esc(inputId)}','${safeTitle}','${prefixSafe}',this)">
+          <span class="tg-missing-dash">${cat.required ? '⚠ missing' : '—'}</span>
+          <span class="tg-quick-add-wrap" id="wrap_${esc(inputId)}" style="display:none;">
+            <span class="tg-prefix-label">${esc(cat.addPrefix)}</span><input class="tg-quick-input" id="${esc(inputId)}" placeholder="value"
+              onkeydown="if(event.key==='Enter'){addCategoryTag('${safeTitle}','${prefixSafe}',this);event.preventDefault();}if(event.key==='Escape'){this.closest('.tg-cat-cell').click();}">
+          </span>
+        </td>`;
+      }
+      const dupFlag = hasDuplicateSubPrefix(tags)
+        ? `<span class="tg-dup-flag" title="Multiple tags share the same prefix — possible duplicate">⚠ duplicate</span>`
+        : '';
+      return `<td class="tg-cat-cell${hasDuplicateSubPrefix(tags) ? ' tg-dup-cell' : ''}">${dupFlag}${tags.map(t => chip(t, cat.strip)).join('')}</td>`;
+    }).join('');
+
+    // Other column (existing non-category tags only)
+    const otherChips = otherTags.map(t => chip(t)).join('');
+    const otherCell = `<td class="tg-cat-cell tg-other-cell">${otherChips || '<span style="color:#ccc;font-size:12px;">—</span>'}</td>`;
+
+    // Add column (always-visible input for adding any new tag)
+    const otherInputId = `other_${title.replace(/\W/g,'_')}`;
+    const addCell = `<td class="tg-cat-cell tg-add-cell">
+      <span class="tg-other-add">
+        <input class="tg-quick-input" id="${esc(otherInputId)}" placeholder="tag…"
+          onkeydown="if(event.key==='Enter'){addTagToProduct('${safeTitle}',this);event.preventDefault();}">
+        <button class="tg-add-btn" onclick="addTagToProduct('${safeTitle}',document.getElementById('${esc(otherInputId)}'))">+</button>
+      </span>
+    </td>`;
+
+    return `<tr class="tg-product-row${hasChanges ? ' tg-has-changes' : ''}">
+      <td class="tg-product-name-cell">${esc(title)}</td>
+      ${catCells}
+      ${otherCell}
+      ${addCell}
+    </tr>`;
+  }).join('');
+
+  document.getElementById('tagProductCard').innerHTML = `
+    <div class="tg-section-header" onclick="tagProductCollapsed=!tagProductCollapsed;renderTagSection();">
+      <div class="tp-section-title" style="margin-bottom:0;">Tags by Product
+        <span style="font-size:11px;font-weight:400;color:#aaa;text-transform:none;margin-left:8px;">click — to add a missing category · × to remove</span>
+      </div>
+      <button class="tg-toggle-btn" style="transform:rotate(${tagProductCollapsed?'-90deg':'0deg'})">${tagProductCollapsed ? '▼' : '▲'}</button>
+    </div>
+    <div class="tg-section-body${tagProductCollapsed ? ' collapsed' : ''}">
+      <div class="table-wrap" style="max-height:560px;">
+        <table class="tg-grid-table">
+          <thead><tr>
+            <th class="tg-name-header tg-sortable" onclick="toggleTagSort('name')">Product ${sortIcon('name')}</th>
+            ${headerCols}
+          </tr></thead>
+          <tbody>${tableRows || `<tr><td colspan="${TAG_CATEGORIES.length + 3}" class="empty-msg">No products found</td></tr>`}</tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
+function toggleTagSort(col) {
+  if (tagSortState.col === col) {
+    tagSortState.dir *= -1;
+  } else {
+    tagSortState.col = col;
+    tagSortState.dir = 1;
+  }
+  const tw = document.querySelector('#tagProductCard .table-wrap');
+  const scrollTop = tw ? tw.scrollTop : 0;
+  renderTagSection();
+  const tw2 = document.querySelector('#tagProductCard .table-wrap');
+  if (tw2) tw2.scrollTop = scrollTop;
+}
+
+function showQuickAdd(inputId, title, prefix, cell) {
+  // Toggle the quick-add input for a missing category tag
+  const wrap  = document.getElementById('wrap_' + inputId);
+  const dash  = cell.querySelector('.tg-missing-dash');
+  if (!wrap) return;
+  const isOpen = wrap.style.display !== 'none';
+  // Close all other open quick-adds first
+  document.querySelectorAll('.tg-quick-add-wrap').forEach(w => { w.style.display = 'none'; });
+  document.querySelectorAll('.tg-missing-dash').forEach(d => { d.style.display = ''; });
+  if (isOpen) return;
+  wrap.style.display = 'inline-flex';
+  if (dash) dash.style.display = 'none';
+  const input = document.getElementById(inputId);
+  if (input) { input.focus(); input.select(); }
+}
+
+function addCategoryTag(title, prefix, inputEl) {
+  const val = inputEl ? inputEl.value.trim() : '';
+  if (!val) return;
+  const fullTag = prefix + val;
+  if (!tagChanges[title]) tagChanges[title] = { add: new Set(), remove: new Set() };
+  tagChanges[title].add.add(fullTag);
+  tagChanges[title].remove.delete(fullTag);
+  if (inputEl) inputEl.value = '';
+  const tw = document.querySelector('#tagProductCard .table-wrap');
+  const scrollTop = tw ? tw.scrollTop : 0;
+  renderTagSection();
+  const tw2 = document.querySelector('#tagProductCard .table-wrap');
+  if (tw2) tw2.scrollTop = scrollTop;
+  renderExport();
+}
+
+function toggleProductTag(title, tag) {
+  if (!tagChanges[title]) tagChanges[title] = { add: new Set(), remove: new Set() };
+  const c = tagChanges[title];
+  const origTags = new Set(
+    ((shopifyData || []).find(r => String(r['Title']||'').trim() === title) || {})['Tags']
+      ? String((shopifyData.find(r => String(r['Title']||'').trim() === title))['Tags']).split(',').map(t => t.trim())
+      : []
+  );
+  if (c.remove.has(tag)) {
+    c.remove.delete(tag);
+  } else if (c.add.has(tag) && !origTags.has(tag)) {
+    c.add.delete(tag);
+  } else {
+    c.remove.add(tag);
+    c.add.delete(tag);
+  }
+  const tw = document.querySelector('#tagProductCard .table-wrap');
+  const scrollTop = tw ? tw.scrollTop : 0;
+  renderTagSection();
+  const tw2 = document.querySelector('#tagProductCard .table-wrap');
+  if (tw2) tw2.scrollTop = scrollTop;
+  renderExport();
+}
+
+function addTagToProduct(title, inputEl) {
+  const tag = inputEl ? inputEl.value.trim() : '';
+  if (!tag) return;
+  if (!tagChanges[title]) tagChanges[title] = { add: new Set(), remove: new Set() };
+  tagChanges[title].add.add(tag);
+  tagChanges[title].remove.delete(tag);
+  if (inputEl) inputEl.value = '';
+  const tw = document.querySelector('#tagProductCard .table-wrap');
+  const scrollTop = tw ? tw.scrollTop : 0;
+  renderTagSection();
+  const tw2 = document.querySelector('#tagProductCard .table-wrap');
+  if (tw2) tw2.scrollTop = scrollTop;
+  renderExport();
+}
+
+function buildPriceData() {
+  // Build variant-level price data, flag issues
+  const data = [];
+  (shopifyData || []).forEach(row => {
+    const variantId = String(row['Variant ID'] || '').trim();
+    const title     = String(row['Title'] || '').trim();
+    const rawPrice  = String(row['Variant Price'] || '').trim();
+    const rawCompAt = String(row['Variant Compare At Price'] || '').trim();
+    const noPrice   = isBlankOrZero(rawPrice);
+    const noCompAt  = isBlankOrZero(rawCompAt);
+    const mismatch  = !noPrice && !noCompAt && rawPrice !== rawCompAt;
+    let issue = null;
+    if (noPrice) issue = 'No Price';
+    else if (noCompAt) issue = 'No Compare-At';
+    else if (mismatch) issue = 'Mismatch';
+    if (issue) data.push({ variantId, title, price: rawPrice, compareAt: rawCompAt, issue });
+  });
+  return data;
+}
+
+function renderPricesMode() {
+  // Build product map: title -> [{ variantId, option1, option2, price, compareAt }]
+  const productMap = new Map();
+  (shopifyData || []).forEach(row => {
+    const title     = String(row['Title'] || '').trim();
+    const variantId = String(row['Variant ID'] || '').trim();
+    if (!title || !variantId) return;
+    if (!productMap.has(title)) productMap.set(title, []);
+    productMap.get(title).push({
+      variantId,
+      option1:   String(row['Option1 Value'] || '').trim(),
+      option2:   String(row['Option2 Value'] || '').trim(),
+      price:     String(row['Variant Price'] || '').trim(),
+      compareAt: String(row['Variant Compare At Price'] || '').trim(),
+    });
+  });
+
+  // Compute stats using effective (post-edit) values
+  let syncableCount = 0;   // variants where compareAt > 0 and price ≠ compareAt
+  let blankBothCount = 0;  // variants where BOTH price and compareAt are blank/zero
+  const flaggedTitles = new Set(); // products still needing manual fix (blank/zero compareAt)
+  const syncedTitles  = new Set(); // products whose prices were already synced via priceChanges
+
+  productMap.forEach((variants, title) => {
+    let productFlagged = false;
+    variants.forEach(v => {
+      const pc      = priceChanges[v.variantId] || {};
+      const price   = pc.price     !== undefined ? pc.price     : v.price;
+      const compAt  = pc.compareAt !== undefined ? pc.compareAt : v.compareAt;
+      const hasComp = !isBlankOrZero(compAt);
+      const hasPrice = !isBlankOrZero(price);
+      if (hasComp && price !== compAt) syncableCount++;
+      if (!hasComp && !hasPrice) blankBothCount++;
+      if (!hasComp || !hasPrice) productFlagged = true;
+    });
+    if (productFlagged) flaggedTitles.add(title);
+    if (priceChanges[variants[0]?.variantId]) syncedTitles.add(title);
+  });
+
+  const cleanCount = productMap.size - flaggedTitles.size;
+
+  // Stats
+  document.getElementById('priceStatsRow').innerHTML = `
+    <div class="stat-tile">
+      <div class="stat-num">${productMap.size.toLocaleString()}</div>
+      <div class="stat-lbl">Total Products</div>
+    </div>
+    <div class="stat-tile c-green">
+      <div class="stat-num">${cleanCount.toLocaleString()}</div>
+      <div class="stat-lbl">Price = Compare-At</div>
+    </div>
+    <div class="stat-tile c-red">
+      <div class="stat-num">${flaggedTitles.size.toLocaleString()}</div>
+      <div class="stat-lbl">Need Attention</div>
+    </div>
+    <div class="stat-tile c-blue">
+      <div class="stat-num">${syncedTitles.size.toLocaleString()}</div>
+      <div class="stat-lbl">Updated</div>
+    </div>`;
+
+  // Clear filter row (not needed in simplified view)
+  document.getElementById('priceFilterRow').innerHTML = '';
+
+  // Build flagged-only table rows
+  let cellIdx = 0;
+  const flaggedRows = [...productMap.entries()]
+    .filter(([t]) => flaggedTitles.has(t))
+    .map(([title, variants]) => {
+      const firstVid  = variants[0]?.variantId;
+      const repPc     = firstVid ? (priceChanges[firstVid] || {}) : {};
+      const repPrice  = repPc.price     !== undefined ? repPc.price     : (variants[0]?.price  || '');
+      const repCompAt = repPc.compareAt !== undefined ? repPc.compareAt : (variants[0]?.compareAt || '');
+      const noP = isBlankOrZero(repPrice);
+      const noC = isBlankOrZero(repCompAt);
+      const isEdited = !!priceChanges[firstVid];
+      const safeTitle = title.replace(/'/g, "\\'");
+      const pIdx = cellIdx++, cIdx = cellIdx++;
+
+      const issue = noC && noP ? 'No price or compare-at'
+                  : noC       ? 'Missing compare-at'
+                  :             'Missing price';
+
+      const productRow = `<tr class="pg-product-row${isEdited ? ' pg-changed' : ''}">
+        <td class="pg-product-name">${esc(title)}<span class="pg-variant-count">${variants.length} variant${variants.length !== 1 ? 's' : ''}</span></td>
+        <td class="pg-price-cell${isEdited && repPc.price !== undefined ? ' pg-edited' : noP ? ' pg-error' : ''}"
+            data-cellidx="${pIdx}" data-title="${esc(title)}" data-field="price"
+            onclick="activateProductPriceCell(this,'${safeTitle}','price')">
+          <span class="pg-cell-text">${esc(repPrice || '—')}</span>
+          <span class="pg-fill-handle" onmousedown="startFillDrag(event,'${safeTitle}','price')"></span>
+        </td>
+        <td class="pg-price-cell${isEdited && repPc.compareAt !== undefined ? ' pg-edited' : noC ? ' pg-error' : ''}"
+            data-cellidx="${cIdx}" data-title="${esc(title)}" data-field="compareAt"
+            onclick="activateProductPriceCell(this,'${safeTitle}','compareAt')">
+          <span class="pg-cell-text">${esc(repCompAt || '—')}</span>
+          <span class="pg-fill-handle" onmousedown="startFillDrag(event,'${safeTitle}','compareAt')"></span>
+        </td>
+        <td class="pg-status-cell"><span class="tp-issue-badge tp-issue-no-price">${esc(issue)}</span></td>
+      </tr>`;
+
+      const varRows = variants.map(v => {
+        const label = [v.option1, v.option2].filter(Boolean).join(' · ') || '—';
+        const vpc   = priceChanges[v.variantId] || {};
+        const vP    = vpc.price     !== undefined ? vpc.price     : v.price;
+        const vC    = vpc.compareAt !== undefined ? vpc.compareAt : v.compareAt;
+        return `<tr class="pg-variant-row">
+          <td class="pg-option-cell">${esc(label)}</td>
+          <td class="pg-variant-price${isBlankOrZero(vP) ? ' pg-v-error' : ''}">${esc(vP || '—')}</td>
+          <td class="pg-variant-price${isBlankOrZero(vC) ? ' pg-v-error' : ''}">${esc(vC || '—')}</td>
+          <td></td>
+        </tr>`;
+      }).join('');
+
+      return productRow + varRows;
+    }).join('');
+
+  const syncCount = syncableCount;
+  const changedVariantCount = Object.keys(priceChanges).length;
+
+  document.getElementById('pricesGridCard').innerHTML = `
+    <div class="pg-sync-action">
+      <div class="pg-sync-left">
+        <div class="pg-sync-title">Sync prices to Compare-At</div>
+        <div class="pg-sync-desc">Sets Price = Compare-At for every variant that has a compare-at value. Products missing both will be flagged below for manual entry.</div>
+      </div>
+      <button class="pg-sync-btn" onclick="syncAllPricesToCompareAt()">
+        ↕ Sync ${syncCount > 0 ? syncCount + ' variant' + (syncCount !== 1 ? 's' : '') : 'all'} now
+      </button>
+    </div>
+    ${flaggedTitles.size > 0 ? `
+    <div class="tp-section-title" style="margin-top:20px;">
+      ⚠ Needs Manual Price — ${flaggedTitles.size} product${flaggedTitles.size !== 1 ? 's' : ''}
+      <span style="font-size:11px;font-weight:400;color:#888;text-transform:none;"> — click a cell to edit · applies to all variants · Tab / Enter to navigate</span>
+    </div>
+    <div class="table-wrap" style="max-height:520px;">
+      <table class="pg-table">
+        <thead><tr>
+          <th style="min-width:240px;">Product</th>
+          <th style="min-width:120px;">Price</th>
+          <th style="min-width:140px;">Compare-At</th>
+          <th style="min-width:160px;">Issue</th>
+        </tr></thead>
+        <tbody>${flaggedRows}</tbody>
+      </table>
+    </div>` : changedVariantCount > 0
+      ? `<div style="text-align:center; padding:40px 0; color:#4ade80; font-size:15px; font-weight:600;">✓ All products look good — ${changedVariantCount} variant(s) updated</div>`
+      : `<div style="text-align:center; padding:40px 0; color:#6b7280; font-size:13px;">Upload a Matrixify export and click Sync to get started.</div>`
+    }`;
+}
+
+function setPriceFilter(f) { tagPriceFilter = f; renderPricesMode(); }
+
+function activateProductPriceCell(cell, title, field) {
+  if (cell.querySelector('input')) return;
+
+  // Get current representative value (from first variant of this product)
+  const firstRow = (shopifyData || []).find(r => String(r['Title']||'').trim() === title && String(r['Variant ID']||'').trim());
+  const firstVid = firstRow ? String(firstRow['Variant ID']||'').trim() : null;
+  const pc = firstVid ? (priceChanges[firstVid] || {}) : {};
+  const origVal = firstRow
+    ? (field === 'price' ? String(firstRow['Variant Price']||'').trim() : String(firstRow['Variant Compare At Price']||'').trim())
+    : '';
+  const currentVal = pc[field] !== undefined ? pc[field] : origVal;
+
+  const input = document.createElement('input');
+  input.className = 'pg-price-input';
+  input.value = currentVal === '—' ? '' : currentVal;
+  cell.textContent = '';
+  cell.appendChild(input);
+  input.focus(); input.select();
+
+  const save = (navigateTo) => {
+    const val = input.value.trim();
+    const otherField = field === 'price' ? 'compareAt' : 'price';
+    // Apply to ALL variants for this product title; also sync the other field
+    (shopifyData || []).forEach(row => {
+      if (String(row['Title']||'').trim() !== title) return;
+      const vid = String(row['Variant ID']||'').trim();
+      if (!vid) return;
+      if (!priceChanges[vid]) priceChanges[vid] = {};
+      priceChanges[vid][field] = val;
+      priceChanges[vid][otherField] = val; // keep price = compare-at
+    });
+    // Preserve scroll position across re-render
+    const wrap = document.querySelector('#pricesGridCard .table-wrap');
+    const savedScroll = wrap ? wrap.scrollTop : 0;
+    renderPricesMode();
+    renderExport();
+    const newWrap = document.querySelector('#pricesGridCard .table-wrap');
+    if (newWrap) newWrap.scrollTop = savedScroll;
+    if (navigateTo !== undefined) {
+      setTimeout(() => {
+        const nextCell = document.querySelector(`.pg-price-cell[data-cellidx="${navigateTo}"]`);
+        if (nextCell) { nextCell.scrollIntoView({ block: 'nearest' }); nextCell.click(); }
+      }, 20);
+    }
+  };
+
+  input.addEventListener('blur', () => save());
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { renderPricesMode(); return; }
+    const allCells = [...document.querySelectorAll('.pg-price-cell[data-cellidx]')]
+      .sort((a,b) => Number(a.dataset.cellidx) - Number(b.dataset.cellidx));
+    const myIdx = Number(cell.dataset.cellidx);
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      const prevCells = allCells.filter(c => Number(c.dataset.cellidx) < myIdx);
+      const nextIdx = e.shiftKey
+        ? prevCells[prevCells.length - 1]?.dataset.cellidx
+        : allCells.find(c => Number(c.dataset.cellidx) > myIdx)?.dataset.cellidx;
+      save(nextIdx !== undefined ? Number(nextIdx) : undefined);
+    } else if (e.key === 'Enter' || e.key === 'ArrowDown') {
+      e.preventDefault();
+      const myField = cell.dataset.field;
+      const sameField = allCells.filter(c => c.dataset.field === myField && Number(c.dataset.cellidx) > myIdx);
+      save(sameField.length ? Number(sameField[0].dataset.cellidx) : undefined);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      const myField = cell.dataset.field;
+      const above = allCells.filter(c => c.dataset.field === myField && Number(c.dataset.cellidx) < myIdx);
+      save(above.length ? Number(above[above.length-1].dataset.cellidx) : undefined);
+    }
+  });
+}
+
+// Legacy alias for any remaining calls
+function editProductPriceCell(cell, title, field, currentVal) {
+  // no-op: replaced by activatePriceCell
+}
+
+// ── Drag-to-fill ─────────────────────────────────────────────────────────────
+let fillDrag = null;
+
+function startFillDrag(e, title, field) {
+  e.preventDefault();
+  e.stopPropagation();
+
+  // Resolve current value for this product
+  const firstRow = (shopifyData||[]).find(r => String(r['Title']||'').trim() === title && String(r['Variant ID']||'').trim());
+  const firstVid = firstRow ? String(firstRow['Variant ID']||'').trim() : null;
+  const pc = firstVid ? (priceChanges[firstVid] || {}) : {};
+  const origKey = field === 'price' ? 'Variant Price' : 'Variant Compare At Price';
+  const origVal = firstRow ? String(firstRow[origKey]||'').trim() : '';
+  const value = pc[field] !== undefined ? pc[field] : origVal;
+
+  const sourceCell = e.target.closest('.pg-price-cell');
+  fillDrag = { field, value, startIdx: sourceCell ? Number(sourceCell.dataset.cellidx) : -1 };
+
+  document.body.style.userSelect = 'none';
+  document.addEventListener('mousemove', onFillDragMove);
+  document.addEventListener('mouseup',   onFillDragEnd, { once: true });
+}
+
+function onFillDragMove(e) {
+  if (!fillDrag) return;
+  const el = document.elementFromPoint(e.clientX, e.clientY);
+  const cell = el && el.closest('.pg-price-cell');
+  const toIdx = cell && cell.dataset.field === fillDrag.field ? Number(cell.dataset.cellidx) : null;
+
+  document.querySelectorAll('.pg-fill-target').forEach(c => c.classList.remove('pg-fill-target'));
+  if (toIdx === null || toIdx === fillDrag.startIdx) return;
+
+  const lo = Math.min(fillDrag.startIdx, toIdx);
+  const hi = Math.max(fillDrag.startIdx, toIdx);
+  document.querySelectorAll(`.pg-price-cell[data-field="${fillDrag.field}"]`).forEach(c => {
+    const idx = Number(c.dataset.cellidx);
+    if (idx > lo && idx <= hi) c.classList.add('pg-fill-target');
+  });
+}
+
+function onFillDragEnd() {
+  if (!fillDrag) return;
+  document.body.style.userSelect = '';
+
+  const targets = [...document.querySelectorAll('.pg-fill-target')];
+  targets.forEach(cell => {
+    const titleAttr = cell.dataset.title;
+    const otherField = fillDrag.field === 'price' ? 'compareAt' : 'price';
+    (shopifyData||[]).forEach(row => {
+      if (String(row['Title']||'').trim() !== titleAttr) return;
+      const vid = String(row['Variant ID']||'').trim();
+      if (!vid) return;
+      if (!priceChanges[vid]) priceChanges[vid] = {};
+      priceChanges[vid][fillDrag.field] = fillDrag.value;
+      priceChanges[vid][otherField]     = fillDrag.value; // sync both
+    });
+    cell.classList.remove('pg-fill-target');
+  });
+
+  fillDrag = null;
+  document.removeEventListener('mousemove', onFillDragMove);
+
+  if (targets.length > 0) {
+    const wrap = document.querySelector('#pricesGridCard .table-wrap');
+    const savedScroll = wrap ? wrap.scrollTop : 0;
+    renderPricesMode();
+    renderExport();
+    const newWrap = document.querySelector('#pricesGridCard .table-wrap');
+    if (newWrap) newWrap.scrollTop = savedScroll;
+  }
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
+function syncAllPricesToCompareAt() {
+  // Set Price = Compare-At for every variant that has a valid compare-at value
+  (shopifyData || []).forEach(row => {
+    const vid    = String(row['Variant ID'] || '').trim();
+    if (!vid) return;
+    const pc     = priceChanges[vid] || {};
+    const compAt = pc.compareAt !== undefined ? pc.compareAt : String(row['Variant Compare At Price'] || '').trim();
+    if (!isBlankOrZero(compAt)) {
+      if (!priceChanges[vid]) priceChanges[vid] = {};
+      priceChanges[vid].price     = compAt;
+      priceChanges[vid].compareAt = compAt;
+    }
+  });
+  const wrap = document.querySelector('#pricesGridCard .table-wrap');
+  const savedScroll = wrap ? wrap.scrollTop : 0;
+  renderPricesMode();
+  renderExport();
+  const newWrap = document.querySelector('#pricesGridCard .table-wrap');
+  if (newWrap) newWrap.scrollTop = savedScroll;
+}
+
+function downloadTagsCSV() {
+  // Product-level export — one row per product with tag changes
+  const tagHeaders = ['ID', 'Handle', 'Command', 'Title', 'Tags', 'Tags Command'];
+  const outputRows = [];
+  const seenTitles = new Set();
+
+  (shopifyData || []).forEach(row => {
+    const title = String(row['Title'] || '').trim();
+    if (!title || seenTitles.has(title)) return; // deduplicate — one row per product
+    const tc = tagChanges[title];
+    if (!tc || ((!tc.add || tc.add.size === 0) && (!tc.remove || tc.remove.size === 0))) return;
+    seenTitles.add(title);
+
+    const tagsStr = String(row['Tags'] || '').trim();
+    let tagsArr = tagsStr ? tagsStr.split(',').map(t => t.trim()).filter(Boolean) : [];
+    if (tc.add)    tc.add.forEach(t => { if (!tagsArr.includes(t)) tagsArr.push(t); });
+    if (tc.remove) tc.remove.forEach(t => { tagsArr = tagsArr.filter(x => x !== t); });
+
+    const out = {};
+    tagHeaders.forEach(h => { out[h] = row[h] !== undefined ? row[h] : ''; });
+    out['Tags']         = tagsArr.join(', ');
+    out['Tags Command'] = 'REPLACE';
+    out['Command']      = 'MERGE';
+    outputRows.push(out);
+  });
+
+  if (outputRows.length === 0) { alert('No tag changes to export.'); return; }
+  downloadCSV(outputRows, `Products_Tags_${today()}.csv`);
+}
+
+function downloadPricesCSV() {
+  // Variant-level export — one row per variant with price changes
+  const priceHeaders = ['ID', 'Handle', 'Command', 'Title',
+                        'Variant Inventory Item ID', 'Variant ID', 'Variant Command',
+                        'Variant Price', 'Variant Compare At Price'];
+  const outputRows = [];
+
+  (shopifyData || []).forEach(row => {
+    const variantId = String(row['Variant ID'] || '').trim();
+    const pc = priceChanges[variantId];
+    if (!pc || (pc.price === undefined && pc.compareAt === undefined)) return;
+
+    const out = {};
+    priceHeaders.forEach(h => { out[h] = row[h] !== undefined ? row[h] : ''; });
+    if (pc.price     !== undefined) out['Variant Price']           = pc.price;
+    if (pc.compareAt !== undefined) out['Variant Compare At Price'] = pc.compareAt;
+    out['Command']         = 'MERGE';
+    out['Variant Command'] = 'MERGE';
+    outputRows.push(out);
+  });
+
+  if (outputRows.length === 0) { alert('No price changes to export.'); return; }
+  downloadCSV(outputRows, `Products_Prices_${today()}.csv`);
+}
+
+// =====================================================================
 // COMPARISON
 // =====================================================================
 function runComparison() {
+  if (appMode === 'tags')   { runTags();   return; }
+  if (appMode === 'prices') { runPrices(); return; }
   const btn = document.getElementById('runBtn');
   btn.disabled = true; btn.textContent = 'Running…'; btn.classList.add('running');
   setTimeout(() => {
@@ -1147,6 +2213,10 @@ function countProducts(rows) {
 }
 
 function renderResults() {
+  // Show standard section, hide tags/prices sections
+  document.getElementById('standardSection').style.display = '';
+  document.getElementById('tagsSection').style.display   = 'none';
+  document.getElementById('pricesSection').style.display = 'none';
   const total      = results.length;
   const updated    = results.filter(r => r.mode === 'populated' && !r.hasIssue).length;
   const warnings   = results.filter(r => r.mode === 'populated' && r.hasIssue).length;
@@ -1263,6 +2333,34 @@ function renderResults() {
 
 function renderExport() {
   const el = document.getElementById('exportCard');
+  if (appMode === 'tags') {
+    const tagChangedCount = Object.keys(tagChanges).filter(t => { const c = tagChanges[t]; return (c.add && c.add.size > 0) || (c.remove && c.remove.size > 0); }).length;
+    el.innerHTML = `
+      <div class="card-label">Export</div>
+      <div class="export-row" style="grid-template-columns: 1fr;">
+        <div>
+          <button class="exp-btn exp-primary" onclick="downloadTagsCSV()" ${tagChangedCount === 0 ? 'disabled style="opacity:0.45;cursor:not-allowed"' : ''}>⬇&nbsp; Download Tag Changes CSV</button>
+          <p style="font-size:11px; color:#bbb; margin-top:6px;">
+            <strong>Tag Changes CSV</strong> — ${tagChangedCount} product(s) with changes. One row per product; imports at the product level via Matrixify.
+          </p>
+        </div>
+      </div>`;
+    return;
+  }
+  if (appMode === 'prices') {
+    const priceChangedCount = Object.keys(priceChanges).length;
+    el.innerHTML = `
+      <div class="card-label">Export</div>
+      <div class="export-row" style="grid-template-columns: 1fr;">
+        <div>
+          <button class="exp-btn exp-primary" onclick="downloadPricesCSV()" ${priceChangedCount === 0 ? 'disabled style="opacity:0.45;cursor:not-allowed"' : ''}>⬇&nbsp; Download Price Changes CSV</button>
+          <p style="font-size:11px; color:#bbb; margin-top:6px;">
+            <strong>Price Changes CSV</strong> — ${priceChangedCount} variant(s) changed. One row per variant; imports at the variant level via Matrixify.
+          </p>
+        </div>
+      </div>`;
+    return;
+  }
   if (appMode === 'compile') {
     el.innerHTML = `
       <div class="card-label">Export</div>
